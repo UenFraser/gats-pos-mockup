@@ -1,0 +1,905 @@
+{
+ "categories": [
+  {
+   "name": "Appetizers",
+   "sort_order": 1,
+   "bar_only": 0
+  },
+  {
+   "name": "Short Orders",
+   "sort_order": 2,
+   "bar_only": 0
+  },
+  {
+   "name": "Chicken Recipe",
+   "sort_order": 3,
+   "bar_only": 0
+  },
+  {
+   "name": "Specialty of the House",
+   "sort_order": 4,
+   "bar_only": 0
+  },
+  {
+   "name": "Beef Recipe",
+   "sort_order": 5,
+   "bar_only": 0
+  },
+  {
+   "name": "Pork Recipe",
+   "sort_order": 6,
+   "bar_only": 0
+  },
+  {
+   "name": "Seafood",
+   "sort_order": 7,
+   "bar_only": 0
+  },
+  {
+   "name": "Soup's",
+   "sort_order": 8,
+   "bar_only": 0
+  },
+  {
+   "name": "Noodles",
+   "sort_order": 9,
+   "bar_only": 0
+  },
+  {
+   "name": "Toppings",
+   "sort_order": 10,
+   "bar_only": 0
+  },
+  {
+   "name": "Beverage",
+   "sort_order": 11,
+   "bar_only": 0
+  },
+  {
+   "name": "Liquor",
+   "sort_order": 12,
+   "bar_only": 1
+  },
+  {
+   "name": "Hard Drinks",
+   "sort_order": 13,
+   "bar_only": 1
+  }
+ ],
+ "items": [
+  {
+   "category": "Appetizers",
+   "name": "Assorted Cold Cuts",
+   "price_cents": 24500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Adidas",
+   "price_cents": 11000,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Beef Kilawin",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Pork Kilawin",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Beef Tapa",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Beef with onion",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Beef with Garlic",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Buttered Mushroom",
+   "price_cents": 11000,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Calamares",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Camaron Rebusado",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Chicken Skin",
+   "price_cents": 13500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Chicken Liver Adobo",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Chicken Gizzard Adobo",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Deep Fried Chicken Gizzard",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Deep Fried Chicken Liver",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Deep Fried Squid",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Ingos²",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Letchon Kawali",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Onion Rings",
+   "price_cents": 8500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Sizzling Chicken Goblets",
+   "price_cents": 15500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Sizzling Gambas",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Sizzling Ox Tongue",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Sizzling Pork Chop",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Sizzling Sisig",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Squid Kilawin",
+   "price_cents": 22000,
+   "is_available": 1
+  },
+  {
+   "category": "Appetizers",
+   "name": "Squid Kinilaw",
+   "price_cents": 22000,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Hamburger",
+   "price_cents": 8500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Cheese Burger",
+   "price_cents": 9500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Chicken Burger",
+   "price_cents": 9500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Egg Burger",
+   "price_cents": 6500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Grilled Chicken Burger",
+   "price_cents": 9500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Sizzling Spaghetti",
+   "price_cents": 9500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Carbonara",
+   "price_cents": 11000,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "French Fries",
+   "price_cents": 8500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Potato Chips",
+   "price_cents": 8500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Cheese Sticks",
+   "price_cents": 8500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Fried Rice",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Toasted Bread",
+   "price_cents": 1000,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Pancit Canton",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Pancit Guisado",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Bihon Guisado",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Tanghon Guisado",
+   "price_cents": 14500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Tapsilog",
+   "price_cents": 9500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Tosilog",
+   "price_cents": 9500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Porksilog",
+   "price_cents": 9500,
+   "is_available": 1
+  },
+  {
+   "category": "Short Orders",
+   "name": "Chopsuey",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Sizzling Chicken Teriyaki",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Sizzling Pepper Chicken",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Chicken Cordon Blue",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Grilled Chicken Breast",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Chicken Forty-Two",
+   "price_cents": 15000,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Buttered Chicken (6pcs)",
+   "price_cents": 23500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Fried Chicken",
+   "price_cents": 23000,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Chicken Adobo",
+   "price_cents": 23500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Chili Chicken",
+   "price_cents": 23500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Chicken Curry",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Chicken Nuggets",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Chicken Recipe",
+   "name": "Chicken Fingers",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sizzling Beef Teriyaki",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sizzling Tenderloin Tips",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sizzling Pepper Steak",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sizzling Burger Steak",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sizzling Pepper Chicken",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sizzling Malasugue Steak",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sizzling Pork Steak",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Chicken Cordon Bleu",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Grilled Chicken Breast",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Chicken Forty-two",
+   "price_cents": 15000,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Back Ribs",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Beef Curry",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Steak Omelette",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Specialty of the House",
+   "name": "Sugba Kilaw",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Sizzling Beef Teriyaki",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Sizzling Tenderloin Tips",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Sizzling Pepper Steak",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Sizzling Burger Steak",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Sizzling Ox Tongue",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Sweet and Sour Beef",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Beef with Broccoli",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Beef with Garlic",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Beef with Onion",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Beef Steak",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Beef Curry",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Steak Omelet",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Beef Recipe",
+   "name": "Beef Kilawin",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Sizzling Pork Chop",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Sizzling Sisig",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Grilled Pork Chop",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Grilled Spareribs",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Chili Ribs",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Back Ribs",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Sweet and Sour Pork",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Pork Adobo",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Pork Recipe",
+   "name": "Pork Kilawin",
+   "price_cents": 17500,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Sizzling Malasugue Steak",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Sizzling Squid",
+   "price_cents": 22000,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Sizzling Gambas",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Sweet & Sour Fish",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Fish Fillet",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Camaron Rebusado",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Calamares",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Kinilaw",
+   "price_cents": 19500,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Sizzling Mix Seafood",
+   "price_cents": 25000,
+   "is_available": 1
+  },
+  {
+   "category": "Seafood",
+   "name": "Squid Kilawin",
+   "price_cents": 22000,
+   "is_available": 1
+  },
+  {
+   "category": "Soup's",
+   "name": "Lomi",
+   "price_cents": 15000,
+   "is_available": 1
+  },
+  {
+   "category": "Soup's",
+   "name": "Beef Soup",
+   "price_cents": 18000,
+   "is_available": 1
+  },
+  {
+   "category": "Soup's",
+   "name": "Chicken Sotanghon Soup",
+   "price_cents": 12000,
+   "is_available": 1
+  },
+  {
+   "category": "Soup's",
+   "name": "Chicken Noodle Soup",
+   "price_cents": 12000,
+   "is_available": 1
+  },
+  {
+   "category": "Soup's",
+   "name": "Tinolang Isda",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Soup's",
+   "name": "Tinolang Ulang",
+   "price_cents": 21000,
+   "is_available": 1
+  },
+  {
+   "category": "Noodles",
+   "name": "Sizzling Crispy Pancit Canton",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Noodles",
+   "name": "Sizzling Beef Canton",
+   "price_cents": 16500,
+   "is_available": 1
+  },
+  {
+   "category": "Toppings",
+   "name": "Beef Toppings",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Toppings",
+   "name": "Pork Toppings",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Toppings",
+   "name": "Chicken Vegetables Toppings",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Toppings",
+   "name": "Vegetable Toppings",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Toppings",
+   "name": "Garlic Shrimp",
+   "price_cents": 18500,
+   "is_available": 1
+  },
+  {
+   "category": "Beverage",
+   "name": "Coke, Sprite, Royal",
+   "price_cents": 2500,
+   "is_available": 1
+  },
+  {
+   "category": "Beverage",
+   "name": "Pepsi, Mt. Dew, 7 Up",
+   "price_cents": 2500,
+   "is_available": 1
+  },
+  {
+   "category": "Beverage",
+   "name": "Canned Juice",
+   "price_cents": 4000,
+   "is_available": 1
+  },
+  {
+   "category": "Beverage",
+   "name": "Coffee Stick",
+   "price_cents": 1500,
+   "is_available": 1
+  },
+  {
+   "category": "Beverage",
+   "name": "Kopiko",
+   "price_cents": 3000,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "Smb Pilsen",
+   "price_cents": 7000,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "San Mig Light/Flavored",
+   "price_cents": 7000,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "Red Horse",
+   "price_cents": 7500,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "Mule",
+   "price_cents": 6500,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "Super Dry",
+   "price_cents": 7500,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "IPAD",
+   "price_cents": 16000,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "Boracay",
+   "price_cents": 18000,
+   "is_available": 1
+  },
+  {
+   "category": "Liquor",
+   "name": "Zombie",
+   "price_cents": 20000,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Tequila Mojetos(Gold)",
+   "price_cents": 55000,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Tequila Mojetos(Silver)",
+   "price_cents": 39000,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Tanduay Rhum (jr)",
+   "price_cents": 8500,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Tanduay Select",
+   "price_cents": 20000,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Margarita Lime/Berry",
+   "price_cents": 36600,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Emperador(375 ml)",
+   "price_cents": 11000,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Emperador(750 ml)",
+   "price_cents": 23000,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "GSM Blue",
+   "price_cents": 20000,
+   "is_available": 1
+  },
+  {
+   "category": "Hard Drinks",
+   "name": "Boracay Coconut/Cappuccino",
+   "price_cents": 21000,
+   "is_available": 1
+  }
+ ]
+}

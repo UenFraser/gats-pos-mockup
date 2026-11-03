@@ -1,0 +1,38 @@
+{
+  "name": "gats-pos-mockup",
+  "version": "0.1.0",
+  "description": "Architecture mockup: Electron + embedded Express/Socket.IO/SQLite + browser clients",
+  "main": "electron/main.js",
+  "author": "Gats",
+  "scripts": {
+    "start": "vite build && electron .",
+    "dist": "vite build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "express": "^4.19.2",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "daisyui": "^4.12.23",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "socket.io-client": "^4.7.5",
+    "tailwindcss": "^3.4.17",
+    "vite": "^5.4.11"
+  },
+  "build": {
+    "appId": "com.gats.posmockup",
+    "productName": "Gats POS Mockup",
+    "files": ["electron/**", "server/**", "client-dist/**", "package.json"],
+    "asarUnpack": ["**/node_modules/better-sqlite3/**"],
+    "win": { "target": "nsis" }
+  }
+}
