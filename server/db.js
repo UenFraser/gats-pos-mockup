@@ -3,7 +3,7 @@ const path = require('path');
 const { randomUUID } = require('crypto');
 
 // Add new migrations to the END of this list. Never edit one that has shipped.
-const MIGRATIONS = [require('./migrations/001_init')];
+   const MIGRATIONS = [require('./migrations/001_init'), require('./migrations/002_auth')];
 
 function migrate(db) {
   const current = db.pragma('user_version', { simple: true });

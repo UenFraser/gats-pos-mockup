@@ -1,3 +1,5 @@
+const { registerAuthRoutes } = require('./authRoutes');
+const { registerPrintRoutes } = require('./printing/routes');
 const express = require('express');
 const http = require('http');
 const os = require('os');
@@ -34,6 +36,9 @@ async function startServer({ dataDir, clientDir, port = 3000 }) {
     res.json({ url, qr: await QRCode.toDataURL(url, { margin: 1, width: 240 }) });
   });
 
+  registerPrintRoutes(app);
+  registerAuthRoutes(app, db);
+  
   app.get('/api/health', (_req, res) => {
     const count = (t) => db.prepare(`SELECT COUNT(*) FROM ${t}`).pluck().get();
     res.json({
