@@ -1,62 +1,71 @@
-const { requireAuth, socketAuth } = require('./auth');
-const { registerAuthRoutes } = require('./authRoutes');
-const { registerPrintRoutes } = require('./printing/routes');
 const express = require('express');
 const http = require('http');
-const os = require('os');
 const path = require('path');
 const { Server } = require('socket.io');
-const QRCode = require('qrcode');
 const { openDb } = require('./db');
 const { seed } = require('./seed');
+const log = require('./log');
+const { createRealtime } = require('./realtime');
+const { socketAuth } = require('./services/auth');
+const { backupDb } = require('./services/backup');
+const { lanAddresses } = require('./services/network');
+const { registerAuthRoutes } = require('./routes/auth');
+const { registerSystemRoutes } = require('./routes/system');
+const { registerMenuRoutes } = require('./routes/menu');
+const { registerPrintRoutes } = require('./printing/routes');
 
-function lanIp() {
-  for (const list of Object.values(os.networkInterfaces()))
-    for (const i of list) if (i.family === 'IPv4' && !i.internal) return i.address;
-  return 'localhost';
-}
-
-async function startServer({ dataDir, clientDir, port = 3000 }) {
-  const db = openDb(dataDir);
+// config comes from server/config.js (makeConfig)
+async function startServer(config) {
+  const db = openDb(config.dataDir);
   seed(db);
+
+  // Backup is best-effort: a failed backup must never stop the restaurant from opening.
+  try { await backupDb(db, config.backupDir, config.keepBackups); }
+  catch (e) { log.error('startup backup failed', e); }
+
   const app = express();
   const httpServer = http.createServer(app);
   const io = new Server(httpServer);
   io.use(socketAuth(db));
+  const rt = createRealtime(io);
+  const getPort = () => httpServer.address().port;
+
+  // Every route is registered BEFORE listening, so nothing can arrive early.
+  registerSystemRoutes(app, db, { getPort });
+  registerAuthRoutes(app, db, rt);
+  registerMenuRoutes(app, db);
+  registerPrintRoutes(app);
+
+  // Unknown /api paths get JSON 404 (not the React page).
+  app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
+  app.use(express.static(config.clientDir));
+  app.get('*', (_req, res) => res.sendFile(path.join(config.clientDir, 'index.html')));
+  // eslint-disable-next-line no-unused-vars
+  app.use((err, req, res, _next) => {
+    log.error(`unhandled error on ${req.method} ${req.url}`, err);
+    res.status(500).json({ error: 'Server error' });
+  });
 
   // Listen on all interfaces so phones can reach it; fall back to a free port if busy.
   await new Promise((resolve, reject) => {
     httpServer.once('listening', resolve);
-    httpServer.on('error', (e) =>
-      e.code === 'EADDRINUSE' ? httpServer.listen(0, '0.0.0.0') : reject(e));
-    httpServer.listen(port, '0.0.0.0');
-  });
-  const actualPort = httpServer.address().port;
-
-  app.get('/api/info', requireAuth(db), async (_req, res) => {
-    const url = `http://${lanIp()}:${actualPort}/`;
-    res.json({ url, qr: await QRCode.toDataURL(url, { margin: 1, width: 240 }) });
-  });
-
-  registerPrintRoutes(app);
-  registerAuthRoutes(app, db);
-  
-  app.get('/api/health', (_req, res) => {
-    const count = (t) => db.prepare(`SELECT COUNT(*) FROM ${t}`).pluck().get();
-    res.json({
-      schemaVersion: db.pragma('user_version', { simple: true }),
-      categories: count('categories'),
-      menuItems: count('menu_items'),
-      tokens: count('tokens'),
+    httpServer.on('error', (e) => {
+      if (e.code === 'EADDRINUSE') {
+        log.warn(`port ${config.port} is busy, using a random port (phones/firewall rule must match!)`);
+        httpServer.listen(0, config.host);
+      } else reject(e);
     });
+    httpServer.listen(config.port, config.host);
   });
 
-  app.use(express.static(clientDir));
-  app.get('*', (_req, res) => res.sendFile(path.join(clientDir, 'index.html')));
+  const port = getPort();
+  log.info(`server listening on ${config.host}:${port}`);
+  log.info('LAN addresses (best first): ' + lanAddresses().map((a) => `${a.address} [${a.name}]`).join(', '));
 
   return {
-    port: actualPort,
-    close: () => { io.close(); httpServer.close(); db.close(); },
+    port,
+    rt,
+    close: () => { io.close(); db.close(); }, // io.close() also closes the HTTP server
   };
 }
 

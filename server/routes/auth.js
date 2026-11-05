@@ -1,9 +1,9 @@
 const express = require('express');
-const A = require('./auth');
+const A = require('../services/auth');
 
 const isLocal = (req) => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
 
-function registerAuthRoutes(app, db) {
+function registerAuthRoutes(app, db, rt) {
   app.use('/api', express.json({ limit: '10kb' }));
   const guard = (fn) => (req, res) => {
     try { fn(req, res); }
@@ -31,7 +31,7 @@ function registerAuthRoutes(app, db) {
     const user = A.authenticate(db, { userId, username, secret });
     res.json({ token: A.startSession(db, user, device), user: { id: user.id, username: user.username, displayName: user.display_name, role: user.role } });
   }));
-  app.post('/api/auth/logout', auth, guard((req, res) => { A.revokeSession(db, req.token); res.json({ ok: true }); }));
+  app.post('/api/auth/logout', auth, guard((req, res) => { A.revokeSession(db, req.token); if (rt) rt.disconnectToken(req.token); res.json({ ok: true }); }));
   app.get('/api/auth/me', auth, (req, res) => res.json({ user: req.user }));
 
   // Staff management (managers only)

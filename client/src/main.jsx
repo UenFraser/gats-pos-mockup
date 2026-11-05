@@ -6,7 +6,8 @@ import { AuthProvider } from './auth/AuthContext';
 import RequireRole from './auth/RequireRole';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
-import { Desktop, Kitchen, Waiter } from './pages/Areas';
+import { Desktop, Kitchen } from './pages/Areas';
+import Waiter from './pages/Waiter';
 
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
