@@ -1,3 +1,4 @@
+const { requireAuth, socketAuth } = require('./auth');
 const { registerAuthRoutes } = require('./authRoutes');
 const { registerPrintRoutes } = require('./printing/routes');
 const express = require('express');
@@ -21,6 +22,7 @@ async function startServer({ dataDir, clientDir, port = 3000 }) {
   const app = express();
   const httpServer = http.createServer(app);
   const io = new Server(httpServer);
+  io.use(socketAuth(db));
 
   // Listen on all interfaces so phones can reach it; fall back to a free port if busy.
   await new Promise((resolve, reject) => {
@@ -31,8 +33,8 @@ async function startServer({ dataDir, clientDir, port = 3000 }) {
   });
   const actualPort = httpServer.address().port;
 
-  app.get('/api/info', async (_req, res) => {
-    const url = `http://${lanIp()}:${actualPort}/waiter`;
+  app.get('/api/info', requireAuth(db), async (_req, res) => {
+    const url = `http://${lanIp()}:${actualPort}/`;
     res.json({ url, qr: await QRCode.toDataURL(url, { margin: 1, width: 240 }) });
   });
 

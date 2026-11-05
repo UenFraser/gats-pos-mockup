@@ -24,6 +24,7 @@
     "postcss": "^8.4.49",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6",
     "socket.io-client": "^4.7.5",
     "tailwindcss": "^3.4.17",
     "vite": "^5.4.11"
@@ -31,8 +32,17 @@
   "build": {
     "appId": "com.gats.posmockup",
     "productName": "Gats POS Mockup",
-    "files": ["electron/**", "server/**", "client-dist/**", "package.json"],
-    "asarUnpack": ["**/node_modules/better-sqlite3/**"],
-    "win": { "target": "nsis" }
+    "files": [
+      "electron/**",
+      "server/**",
+      "client-dist/**",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   }
 }
