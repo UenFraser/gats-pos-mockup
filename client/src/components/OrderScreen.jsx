@@ -3,7 +3,7 @@
 // The client sends ONLY token id, item ids and quantities. Prices and staff come from the server.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../lib/api';
-import { php } from '../lib/format';
+import { php, timeLocal } from '../lib/format';
 import { connectSocket } from '../lib/socket';
 import { newRequestId } from '../lib/requestId';
 
@@ -23,6 +23,9 @@ export default function OrderScreen() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [sending, setSending] = useState(false);
+  const [flashId, setFlashId] = useState(null);      // item row highlighted after a follow-up
+  const [followBusy, setFollowBusy] = useState(null);
+  const flashTimer = useRef(null);
   const requestIdRef = useRef(null); // same id on a retry of the SAME cart, so it is saved once
 
   const token = tokens.find((t) => t.id === tokenId) || null;
@@ -53,10 +56,9 @@ export default function OrderScreen() {
   useEffect(() => {
     const s = connectSocket();
     const refresh = () => { loadTokens(); loadTab(); };
-    s.on('token:changed', refresh);
-    s.on('session:updated', refresh);
-    s.on('connect', refresh);
-    return () => { s.off('token:changed', refresh); s.off('session:updated', refresh); s.off('connect', refresh); };
+    const events = ['token:changed', 'session:updated', 'kitchen:order-done', 'kitchen:order-recalled', 'connect'];
+    events.forEach((e) => s.on(e, refresh));
+    return () => events.forEach((e) => s.off(e, refresh));
   }, [loadTokens, loadTab]);
 
   const changeCart = (fn) => { requestIdRef.current = null; setCart(fn); }; // new content = new request id
@@ -100,6 +102,21 @@ export default function OrderScreen() {
     }
   }
 
+  // Nudge the kitchen about one food item. Only the kitchen screen hears it; the row flashes here as confirmation.
+  async function followUp(item) {
+    setFollowBusy(item.id); setError('');
+    try {
+      await api.post('/api/followups/food', { orderItemId: item.id });
+      setFlashId(item.id);
+      clearTimeout(flashTimer.current);
+      flashTimer.current = setTimeout(() => setFlashId(null), 3000);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setFollowBusy(null);
+    }
+  }
+
   const q = search.trim().toLowerCase();
   const shown = useMemo(() => categories
     .filter((c) => cat === 'ALL' || c.id === cat)
@@ -135,12 +152,31 @@ export default function OrderScreen() {
       {token && tab && (
         <section className="card bg-base-200 p-3">
           <h3 className="font-semibold text-sm mb-1">Already ordered ({php(tab.totalCents)})</h3>
-          {tab.batches.map((b) => b.items.map((i) => (
-            <p key={i.id} className="text-sm flex justify-between">
-              <span>{i.quantity - i.voidedQuantity}x {i.name}{i.voidedQuantity > 0 ? ` (${i.voidedQuantity} voided)` : ''}</span>
-              <span>{php((i.quantity - i.voidedQuantity) * i.unitPriceCents)}</span>
-            </p>
-          )))}
+          {tab.batches.map((b) => {
+            const hasKitchen = b.items.some((i) => i.kitchen);
+            return (
+              <div key={b.id} className="mb-2">
+                <p className="text-xs opacity-60">
+                  {timeLocal(b.createdAt)} · {b.staff}{hasKitchen ? (b.status === 'DONE' ? ' · ready' : ' · in kitchen') : ''}
+                </p>
+                {b.items.map((i) => {
+                  const left = i.quantity - i.voidedQuantity;
+                  const canFollow = b.status === 'ACTIVE' && i.kitchen && left > 0;
+                  return (
+                    <div key={i.id} className={`text-sm flex items-center gap-2 rounded px-1 transition-colors ${flashId === i.id ? 'bg-warning/40' : ''}`}>
+                      <span className="flex-1">{left}x {i.name}{i.voidedQuantity > 0 ? ` (${i.voidedQuantity} voided)` : ''}</span>
+                      <span>{php(left * i.unitPriceCents)}</span>
+                      {canFollow && (
+                        <button className="btn btn-xs btn-outline" disabled={followBusy === i.id} onClick={() => followUp(i)}>
+                          Follow up
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </section>
       )}
 

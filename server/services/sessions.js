@@ -28,11 +28,13 @@ function getSession(db, id) {
 
   const rows = db.prepare(`
     SELECT b.id AS batch_id, b.created_at, b.status AS batch_status, u.display_name AS staff,
-           n.id AS item_id, n.item_name, n.unit_price_cents, n.quantity, n.net_quantity, n.notes
+           n.id AS item_id, n.item_name, n.unit_price_cents, n.quantity, n.net_quantity, n.notes, c.kitchen
       FROM order_batches b
       JOIN users u ON u.id = b.user_id
       LEFT JOIN order_items oi ON oi.batch_id = b.id          -- oi.rowid keeps the order items were entered in
       LEFT JOIN v_order_items_net n ON n.id = oi.id
+      LEFT JOIN menu_items mi ON mi.id = oi.menu_item_id
+      LEFT JOIN categories c ON c.id = mi.category_id
      WHERE b.session_id = ?
      ORDER BY b.created_at, oi.rowid`).all(id);
 
@@ -47,7 +49,7 @@ function getSession(db, id) {
     if (r.item_id) {
       byId.get(r.batch_id).items.push({
         id: r.item_id, name: r.item_name, unitPriceCents: r.unit_price_cents,
-        quantity: r.quantity, voidedQuantity: r.quantity - r.net_quantity, notes: r.notes,
+        quantity: r.quantity, voidedQuantity: r.quantity - r.net_quantity, notes: r.notes, kitchen: !!r.kitchen,
       });
       if (r.batch_status !== 'CANCELLED') totalCents += r.net_quantity * r.unit_price_cents;
     }

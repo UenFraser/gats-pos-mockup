@@ -6,7 +6,7 @@ const ROOMS_BY_ROLE = {
   KDS: ['role:kitchen'],
   WAITER: ['role:waiter'],
   CASHIER: ['role:cashier'],
-  MANAGER: ['role:cashier', 'role:manager'], // managers see everything cashiers see
+  MANAGER: ['role:cashier', 'role:manager', 'role:kitchen', 'role:waiter'], // managers see everything
 };
 
 function createRealtime(io) {

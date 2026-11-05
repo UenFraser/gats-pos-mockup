@@ -3,7 +3,8 @@ import { useAuth } from '../auth/AuthContext';
 import { connectSocket } from '../lib/socket';
 
 // Common page frame: title, who is logged in, live-connection badge, logout.
-export default function Shell({ title, children }) {
+// wide = full-width content (the kitchen grid).
+export default function Shell({ title, children, wide = false }) {
   const { user, logout } = useAuth();
   const [online, setOnline] = useState(false);
 
@@ -26,7 +27,7 @@ export default function Shell({ title, children }) {
         <span className="text-sm hidden sm:inline">{user.displayName} ({user.role})</span>
         <button className="btn btn-sm" onClick={logout}>Log out</button>
       </div>
-      <main className="p-4 max-w-3xl mx-auto">{children}</main>
+      <main className={`p-4 mx-auto ${wide ? '' : 'max-w-3xl'}`}>{children}</main>
     </div>
   );
 }

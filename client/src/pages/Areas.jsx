@@ -22,5 +22,3 @@ export function Desktop() {
     </Shell>
   );
 }
-
-export const Kitchen = () => <Shell title="Kitchen"><p>Kitchen screens arrive in Phase 5.</p></Shell>;
