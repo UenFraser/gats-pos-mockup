@@ -1,5 +1,6 @@
 // Placeholder screens. Each phase replaces one of these with the real pages.
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Shell from '../components/Shell';
 import { api } from '../lib/api';
 
@@ -9,6 +10,7 @@ export function Desktop() {
   return (
     <Shell title="Desktop">
       <div className="space-y-4">
+        <Link to="/desktop/order" className="btn btn-primary">New order</Link>
         <p>Cashier screens arrive in Phase 6. Phones can scan this code to open the POS.</p>
         {info && (
           <div className="card bg-base-200 p-4 items-center text-center">

@@ -13,7 +13,7 @@ function createRealtime(io) {
   // socketAuth has already put the user on socket.user
   io.on('connection', (socket) => {
     const u = socket.user;
-    socket.join([`user:${u.id}`, ...(ROOMS_BY_ROLE[u.role] || [])]);
+    socket.join(['all', `user:${u.id}`, ...(ROOMS_BY_ROLE[u.role] || [])]); // 'all' = every logged-in socket
     log.info(`socket connected: ${u.username} (${u.role})`);
     socket.on('disconnect', (why) => log.info(`socket disconnected: ${u.username} (${why})`));
   });
