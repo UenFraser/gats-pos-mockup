@@ -9,6 +9,8 @@ const MIGRATIONS = [
   require('./migrations/002_auth'),
   require('./migrations/003_kitchen_flag'),
   require('./migrations/004_kitchen_state'),
+  require('./migrations/005_notifications'),
+  require('./migrations/006_approval_pin'),
 ];
 
 function migrate(db) {

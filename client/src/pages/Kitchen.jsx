@@ -6,6 +6,7 @@ import KitchenNav from '../components/KitchenNav';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
 import { play } from '../lib/sounds';
+import { useSoundUnlock } from '../lib/useSoundUnlock';
 
 const FOLLOWUP_MS = 90 * 1000; // how long a followed-up item stays highlighted
 
@@ -23,7 +24,7 @@ export default function Kitchen() {
   const [error, setError] = useState('');
   const [marked, setMarked] = useState({}); // order item id -> true while highlighted
   const [, setTick] = useState(0);
-  const [needTap, setNeedTap] = useState(() => (navigator.userActivation ? !navigator.userActivation.hasBeenActive : true));
+  const needTap = useSoundUnlock();
   const timers = useRef([]);
 
   const load = useCallback(() => {
@@ -55,15 +56,6 @@ export default function Kitchen() {
       timers.current.forEach(clearTimeout);
     };
   }, [load]);
-
-  // Browsers keep sound blocked until someone taps the page once.
-  useEffect(() => {
-    if (!needTap) return undefined;
-    const unlock = () => setNeedTap(false);
-    window.addEventListener('pointerdown', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
-    return () => { window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
-  }, [needTap]);
 
   async function done(id) {
     try { await api.post(`/api/kitchen/orders/${id}/done`); load(); }

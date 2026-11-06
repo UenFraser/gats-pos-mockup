@@ -2,6 +2,7 @@ const { branchId, newId, nowIso } = require('../db');
 const { getOrderableItem } = require('./menu');
 const { businessDate } = require('./businessTime');
 const { queue } = require('./outbox');
+const { notify } = require('./notifications');
 
 class OrderError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -66,7 +67,7 @@ function placeOrder(db, rt, user, body) {
       queue(db, 'session', 'sessions', id, 'insert');
     } else {
       // Ordering on an existing tab (a RESERVED token becomes OPEN when seated).
-      db.prepare("UPDATE sessions SET status = 'OPEN', has_unread_update = 1, updated_at = ? WHERE id = ?").run(now, session.id);
+      db.prepare("UPDATE sessions SET status = 'OPEN', updated_at = ? WHERE id = ?").run(now, session.id);
       queue(db, 'session', 'sessions', session.id, 'update');
     }
 
@@ -82,6 +83,12 @@ function placeOrder(db, rt, user, body) {
       insItem.run(id, branchId(db), batchId, r.item.id, r.item.name, r.item.price_cents, r.quantity, r.notes);
       queue(db, 'order_item', 'order_items', id, 'insert');
     }
+
+    // Tell the other side (green = items added). Saved in the same transaction as the order.
+    notify(db, rt, {
+      sessionId: session.id, tokenNumber: token.token_number, actor: user, type: 'ADD',
+      summary: (opened ? 'New tab: ' : '') + resolved.map((r) => `${r.quantity}x ${r.item.name}`).join(', '),
+    });
 
     // Events go out only if this whole transaction commits.
     const kitchenItems = resolved.filter((r) => r.item.kitchen);

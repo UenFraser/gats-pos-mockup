@@ -1,9 +1,12 @@
 const { branchId } = require('../db');
+const { unreadCounts, listUnread } = require('./notifications');
 
 // Money comes from v_order_items_net (migration 001): quantity minus voids, times the price copied at order time.
-function listOpenSessions(db) {
+// audience = 'CASHIER' or 'WAITER': whose unread notifications to count (see notifications.js)
+function listOpenSessions(db, audience) {
+  const counts = unreadCounts(db, audience);
   return db.prepare(`
-    SELECT s.id, s.token_id, t.token_number, t.zone, s.status, s.created_at, s.is_new, s.has_unread_update,
+    SELECT s.id, s.token_id, t.token_number, t.zone, s.status, s.created_at, s.bill_requested_at,
            u.display_name AS opened_by_name,
            COALESCE((SELECT SUM(n.net_amount_cents) FROM order_batches b JOIN v_order_items_net n ON n.batch_id = b.id
                       WHERE b.session_id = s.id AND b.status != 'CANCELLED'), 0) AS total_cents,
@@ -15,12 +18,12 @@ function listOpenSessions(db) {
      WHERE s.status = 'OPEN' AND s.branch_id = ?
      ORDER BY s.created_at`).all(branchId(db)).map((r) => ({
     id: r.id, tokenId: r.token_id, tokenNumber: r.token_number, zone: r.zone, status: r.status,
-    openedAt: r.created_at, openedBy: r.opened_by_name, isNew: !!r.is_new, hasUnreadUpdate: !!r.has_unread_update,
+    openedAt: r.created_at, openedBy: r.opened_by_name, billRequestedAt: r.bill_requested_at, unread: counts.get(r.id) || {},
     totalCents: r.total_cents, itemCount: r.item_count,
   }));
 }
 
-function getSession(db, id) {
+function getSession(db, id, audience) {
   const s = db.prepare(`
     SELECT s.*, t.token_number, t.zone FROM sessions s JOIN tokens t ON t.id = s.token_id
      WHERE s.id = ? AND s.branch_id = ?`).get(id, branchId(db));
@@ -58,6 +61,10 @@ function getSession(db, id) {
     id: s.id, tokenId: s.token_id, tokenNumber: s.token_number, zone: s.zone, status: s.status,
     businessDate: s.business_date, openedAt: s.created_at,
     reservationName: s.reservation_name, reservationFeeCents: s.reservation_fee_cents,
+    billRequestedAt: s.bill_requested_at,
+    billRequestedBy: s.bill_requested_by
+      ? db.prepare('SELECT display_name FROM users WHERE id = ?').pluck().get(s.bill_requested_by) : null,
+    notifications: listUnread(db, id, audience), // unread for the viewer; the screen shows them, then marks them read
     totalCents, batches,
   };
 }

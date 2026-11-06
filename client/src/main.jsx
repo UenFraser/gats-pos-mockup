@@ -10,7 +10,7 @@ import Waiter from './pages/Waiter';
 import DesktopOrder from './pages/DesktopOrder';
 import Kitchen from './pages/Kitchen';
 import KitchenHistory from './pages/KitchenHistory';
-import { Desktop } from './pages/Areas';
+import Desktop from './pages/Desktop';
 
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>

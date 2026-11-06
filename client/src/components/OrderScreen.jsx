@@ -2,49 +2,58 @@
 // Used by the waiter phone (/waiter) and the cashier counter (/desktop/order).
 // The client sends ONLY token id, item ids and quantities. Prices and staff come from the server.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
-import { php, timeLocal } from '../lib/format';
+import { php } from '../lib/format';
 import { connectSocket } from '../lib/socket';
 import { newRequestId } from '../lib/requestId';
+import { useSessionView } from '../lib/useSessionView';
+import Changes from './Changes';
+import NotifDots from './NotifDots';
+import SessionTab from './SessionTab';
+import VoidDialog from './VoidDialog';
 
 const ZONES = ['RESTAURANT', 'BAR', 'TAKEOUT'];
 const ZONE_LABEL = { RESTAURANT: 'Restaurant', BAR: 'Bar', TAKEOUT: 'Takeout' };
 const STATUS_CLASS = { FREE: 'btn-outline', OPEN: 'btn-warning', RESERVED: 'btn-info' };
+const TOKEN_REFRESH = ['token:changed', 'session:updated', 'session:bill-requested', 'session:bill-cleared', 'session:closed', 'connect'];
 const MAX_QTY = 99;
 
 export default function OrderScreen() {
   const [tokens, setTokens] = useState([]);
+  const [flags, setFlags] = useState({}); // sessionId -> { unread, billRequested }
   const [tokenId, setTokenId] = useState(null);
   const [categories, setCategories] = useState([]);
   const [cat, setCat] = useState('ALL');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState([]); // [{ menuItemId, name, priceCents, quantity }]
-  const [tab, setTab] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [sending, setSending] = useState(false);
-  const [flashId, setFlashId] = useState(null);      // item row highlighted after a follow-up
-  const [followBusy, setFollowBusy] = useState(null);
-  const flashTimer = useRef(null);
   const requestIdRef = useRef(null); // same id on a retry of the SAME cart, so it is saved once
+  const [voidItem, setVoidItem] = useState(null);
+  const [params] = useSearchParams();
 
   const token = tokens.find((t) => t.id === tokenId) || null;
   const zone = token?.zone;
-  const sessionId = token?.sessionId || null;
+  const { session: tab, changes, dismissChanges, reload: reloadTab } = useSessionView(token?.sessionId || null);
 
   const loadTokens = useCallback(() => {
-    api.get('/api/tokens').then((d) => setTokens(d.tokens)).catch((e) => setError(e.message));
+    Promise.all([api.get('/api/tokens'), api.get('/api/sessions')])
+      .then(([t, s]) => {
+        setTokens(t.tokens);
+        setFlags(Object.fromEntries(s.sessions.map((x) => [x.id, { unread: x.unread, billRequested: !!x.billRequestedAt }])));
+      })
+      .catch((e) => setError(e.message));
   }, []);
-
-  const loadTab = useCallback(() => {
-    if (!sessionId) { setTab(null); return; }
-    api.get(`/api/sessions/${sessionId}`).then((d) => setTab(d.session)).catch(() => setTab(null));
-  }, [sessionId]);
-
   useEffect(() => { loadTokens(); }, [loadTokens]);
-  useEffect(() => { loadTab(); }, [loadTab]);
 
-  // Menu for the token's zone (alcohol is only returned for bar tokens).
+  // /desktop/order?token=<id> opens straight on that token (the cashier's "Add items" button).
+  const wanted = params.get('token');
+  useEffect(() => {
+    if (wanted && !tokenId && tokens.some((t) => t.id === wanted)) setTokenId(wanted);
+  }, [wanted, tokens, tokenId]);
+
   useEffect(() => {
     if (!zone) return;
     api.get(`/api/menu?zone=${zone}`)
@@ -52,14 +61,11 @@ export default function OrderScreen() {
       .catch((e) => setError(e.message));
   }, [zone]);
 
-  // Live updates from the server; refetch after any reconnect too.
   useEffect(() => {
     const s = connectSocket();
-    const refresh = () => { loadTokens(); loadTab(); };
-    const events = ['token:changed', 'session:updated', 'kitchen:order-done', 'kitchen:order-recalled', 'connect'];
-    events.forEach((e) => s.on(e, refresh));
-    return () => events.forEach((e) => s.off(e, refresh));
-  }, [loadTokens, loadTab]);
+    TOKEN_REFRESH.forEach((e) => s.on(e, loadTokens));
+    return () => TOKEN_REFRESH.forEach((e) => s.off(e, loadTokens));
+  }, [loadTokens]);
 
   const changeCart = (fn) => { requestIdRef.current = null; setCart(fn); }; // new content = new request id
 
@@ -94,7 +100,7 @@ export default function OrderScreen() {
       requestIdRef.current = null;
       setCart([]);
       setNotice(`Order sent for ${token.number}`);
-      loadTokens(); loadTab();
+      loadTokens(); reloadTab();
     } catch (e) {
       setError(`${e.message}. Your cart is kept; tap Send again.`);
     } finally {
@@ -102,19 +108,9 @@ export default function OrderScreen() {
     }
   }
 
-  // Nudge the kitchen about one food item. Only the kitchen screen hears it; the row flashes here as confirmation.
-  async function followUp(item) {
-    setFollowBusy(item.id); setError('');
-    try {
-      await api.post('/api/followups/food', { orderItemId: item.id });
-      setFlashId(item.id);
-      clearTimeout(flashTimer.current);
-      flashTimer.current = setTimeout(() => setFlashId(null), 3000);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setFollowBusy(null);
-    }
+  async function requestBill() {
+    try { await api.post(`/api/sessions/${tab.id}/bill-request`); setNotice(`Bill requested for ${token.number}`); reloadTab(); }
+    catch (e) { setError(e.message); }
   }
 
   const q = search.trim().toLowerCase();
@@ -137,47 +133,33 @@ export default function OrderScreen() {
           <div key={z} className="mb-2">
             <p className="text-xs opacity-70 mb-1">{ZONE_LABEL[z]}</p>
             <div className="flex flex-wrap gap-2">
-              {tokens.filter((t) => t.zone === z).map((t) => (
-                <button key={t.id} onClick={() => pickToken(t)}
-                  className={`btn btn-sm w-14 ${STATUS_CLASS[t.status]} ${t.id === tokenId ? 'ring ring-primary' : ''}`}>
-                  {t.number}
-                </button>
-              ))}
+              {tokens.filter((t) => t.zone === z).map((t) => {
+                const f = flags[t.sessionId] || {};
+                return (
+                  <div key={t.id} className="flex flex-col items-center gap-0.5">
+                    <button onClick={() => pickToken(t)}
+                      className={`btn btn-sm w-14 ${STATUS_CLASS[t.status]} ${t.id === tokenId ? 'ring ring-primary' : ''}`}>
+                      {t.number}
+                    </button>
+                    <NotifDots unread={f.unread} billRequested={f.billRequested} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
-        <p className="text-xs opacity-60">Outlined = free, orange = open tab, blue = reserved.</p>
+        <p className="text-xs opacity-60">Outlined = free, orange = open tab, blue = reserved. Green/red/blue counts = changes you have not seen.</p>
       </section>
 
+      {token && <Changes changes={changes} onDismiss={dismissChanges} />}
+
       {token && tab && (
-        <section className="card bg-base-200 p-3">
-          <h3 className="font-semibold text-sm mb-1">Already ordered ({php(tab.totalCents)})</h3>
-          {tab.batches.map((b) => {
-            const hasKitchen = b.items.some((i) => i.kitchen);
-            return (
-              <div key={b.id} className="mb-2">
-                <p className="text-xs opacity-60">
-                  {timeLocal(b.createdAt)} · {b.staff}{hasKitchen ? (b.status === 'DONE' ? ' · ready' : ' · in kitchen') : ''}
-                </p>
-                {b.items.map((i) => {
-                  const left = i.quantity - i.voidedQuantity;
-                  const canFollow = b.status === 'ACTIVE' && i.kitchen && left > 0;
-                  return (
-                    <div key={i.id} className={`text-sm flex items-center gap-2 rounded px-1 transition-colors ${flashId === i.id ? 'bg-warning/40' : ''}`}>
-                      <span className="flex-1">{left}x {i.name}{i.voidedQuantity > 0 ? ` (${i.voidedQuantity} voided)` : ''}</span>
-                      <span>{php(left * i.unitPriceCents)}</span>
-                      {canFollow && (
-                        <button className="btn btn-xs btn-outline" disabled={followBusy === i.id} onClick={() => followUp(i)}>
-                          Follow up
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </section>
+        <>
+          <SessionTab session={tab} onError={setError} onVoid={setVoidItem} />
+          <button className="btn btn-sm btn-outline" disabled={!!tab.billRequestedAt} onClick={requestBill}>
+            {tab.billRequestedAt ? 'Bill requested' : 'Request bill'}
+          </button>
+        </>
       )}
 
       {token && cart.length > 0 && (
@@ -231,6 +213,11 @@ export default function OrderScreen() {
             {sending ? 'Sending...' : `Send order for ${token.number}: ${cartCount} item${cartCount > 1 ? 's' : ''}, ${php(cartTotal)}`}
           </button>
         </div>
+      )}
+
+      {voidItem && tab && (
+        <VoidDialog sessionId={tab.id} item={voidItem} onClose={() => setVoidItem(null)}
+          onDone={() => { setVoidItem(null); setNotice('Void approved'); loadTokens(); reloadTab(); }} />
       )}
     </div>
   );
