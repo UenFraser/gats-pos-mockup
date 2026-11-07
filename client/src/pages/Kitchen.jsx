@@ -83,16 +83,21 @@ export default function Kitchen() {
             <div className="p-4 space-y-2 overflow-y-auto">
               {o.items.map((i) => {
                 const voided = i.netQuantity === 0;
+                const movedAway = voided && i.voidedQuantity === 0 && i.movedQuantity > 0;
                 const hot = marked[i.id] && !voided;
                 return (
                   <div key={i.id}
                     className={`text-lg font-bold p-1.5 rounded-lg transition-colors ${
-                      voided ? 'line-through opacity-40 bg-error/10 text-error'
+                      voided ? (movedAway ? 'line-through opacity-40 bg-info/10 text-info' : 'line-through opacity-40 bg-error/10 text-error')
                         : hot ? 'bg-warning/30 border border-warning animate-pulse' : ''}`}>
                     <div className="flex items-center gap-2">
                       {!voided && <span className="text-primary font-black text-xl">{i.netQuantity}</span>}
                       <span className={voided ? 'font-normal italic' : ''}>{i.name}</span>
                       {!voided && i.voidedQuantity > 0 && <span className="badge badge-error badge-sm text-white">-{i.voidedQuantity}</span>}
+                      {i.movedQuantity > 0 && (
+                        <span className="badge badge-info badge-sm text-white no-underline">{movedAway ? '' : `-${i.movedQuantity} `}to {i.movedTo.join(', ')}</span>
+                      )}
+                      {i.swappedFrom && <span className="badge badge-info badge-sm text-white">from {i.swappedFrom}</span>}
                       {hot && <span className="badge badge-warning font-black ml-auto">Follow-up!</span>}
                     </div>
                     {i.notes && !voided && <p className="text-sm font-normal italic opacity-70">{i.notes}</p>}

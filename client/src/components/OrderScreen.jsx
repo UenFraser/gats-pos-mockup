@@ -11,7 +11,9 @@ import { useSessionView } from '../lib/useSessionView';
 import Changes from './Changes';
 import NotifDots from './NotifDots';
 import SessionTab from './SessionTab';
+import SwapDialog from './SwapDialog';
 import VoidDialog from './VoidDialog';
+import { useAuth } from '../auth/AuthContext';
 
 const ZONES = ['RESTAURANT', 'BAR', 'TAKEOUT'];
 const ZONE_LABEL = { RESTAURANT: 'Restaurant', BAR: 'Bar', TAKEOUT: 'Takeout' };
@@ -32,6 +34,9 @@ export default function OrderScreen() {
   const [sending, setSending] = useState(false);
   const requestIdRef = useRef(null); // same id on a retry of the SAME cart, so it is saved once
   const [voidItem, setVoidItem] = useState(null);
+  const [swapItem, setSwapItem] = useState(null);
+  const { user } = useAuth();
+  const canSwap = user.role !== 'WAITER'; // waiters ask the cashier to swap
   const [params] = useSearchParams();
 
   const token = tokens.find((t) => t.id === tokenId) || null;
@@ -155,7 +160,7 @@ export default function OrderScreen() {
 
       {token && tab && (
         <>
-          <SessionTab session={tab} onError={setError} onVoid={setVoidItem} />
+          <SessionTab session={tab} onError={setError} onVoid={setVoidItem} onSwap={canSwap ? setSwapItem : undefined} />
           <button className="btn btn-sm btn-outline" disabled={!!tab.billRequestedAt} onClick={requestBill}>
             {tab.billRequestedAt ? 'Bill requested' : 'Request bill'}
           </button>
@@ -213,6 +218,11 @@ export default function OrderScreen() {
             {sending ? 'Sending...' : `Send order for ${token.number}: ${cartCount} item${cartCount > 1 ? 's' : ''}, ${php(cartTotal)}`}
           </button>
         </div>
+      )}
+
+      {swapItem && tab && (
+        <SwapDialog session={tab} item={swapItem} onClose={() => setSwapItem(null)}
+          onDone={(to) => { setSwapItem(null); setNotice(`Moved to ${to}`); loadTokens(); reloadTab(); }} />
       )}
 
       {voidItem && tab && (

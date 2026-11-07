@@ -1,5 +1,6 @@
 const { branchId } = require('../db');
 const { unreadCounts, listUnread } = require('./notifications');
+const { MOVED_TO_SQL, SWAPPED_FROM_SQL } = require('./itemSql');
 
 // Money comes from v_order_items_net (migration 001): quantity minus voids, times the price copied at order time.
 // audience = 'CASHIER' or 'WAITER': whose unread notifications to count (see notifications.js)
@@ -31,7 +32,8 @@ function getSession(db, id, audience) {
 
   const rows = db.prepare(`
     SELECT b.id AS batch_id, b.created_at, b.status AS batch_status, u.display_name AS staff,
-           n.id AS item_id, n.item_name, n.unit_price_cents, n.quantity, n.net_quantity, n.notes, c.kitchen
+           n.id AS item_id, n.item_name, n.unit_price_cents, n.quantity, n.net_quantity, n.notes, c.kitchen, c.bar_only,
+           n.voided_quantity, n.moved_quantity, ${MOVED_TO_SQL} AS moved_to, ${SWAPPED_FROM_SQL} AS swapped_from
       FROM order_batches b
       JOIN users u ON u.id = b.user_id
       LEFT JOIN order_items oi ON oi.batch_id = b.id          -- oi.rowid keeps the order items were entered in
@@ -52,7 +54,9 @@ function getSession(db, id, audience) {
     if (r.item_id) {
       byId.get(r.batch_id).items.push({
         id: r.item_id, name: r.item_name, unitPriceCents: r.unit_price_cents,
-        quantity: r.quantity, voidedQuantity: r.quantity - r.net_quantity, notes: r.notes, kitchen: !!r.kitchen,
+        quantity: r.quantity, notes: r.notes, kitchen: !!r.kitchen, barOnly: !!r.bar_only,
+        netQuantity: r.net_quantity, voidedQuantity: r.voided_quantity, movedQuantity: r.moved_quantity,
+        movedTo: r.moved_to ? r.moved_to.split(',') : [], swappedFrom: r.swapped_from || null,
       });
       if (r.batch_status !== 'CANCELLED') totalCents += r.net_quantity * r.unit_price_cents;
     }

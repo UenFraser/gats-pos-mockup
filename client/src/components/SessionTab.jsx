@@ -5,7 +5,8 @@ import { api } from '../lib/api';
 import { php, timeLocal } from '../lib/format';
 
 // onVoid(item) is optional: when given, every item with something left shows a Void button.
-export default function SessionTab({ session, onError, onVoid }) {
+// onSwap(item) is optional too: cashier and manager can move an item to another table.
+export default function SessionTab({ session, onError, onVoid, onSwap }) {
   const [flashId, setFlashId] = useState(null); // row highlighted for 3 s after a follow-up (confirmation)
   const [busy, setBusy] = useState(null);
   const timer = useRef(null);
@@ -35,16 +36,24 @@ export default function SessionTab({ session, onError, onVoid }) {
               {timeLocal(b.createdAt)} · {b.staff}{hasKitchen ? (b.status === 'DONE' ? ' · ready' : ' · in kitchen') : ''}
             </p>
             {b.items.map((i) => {
-              const left = i.quantity - i.voidedQuantity;
+              const left = i.netQuantity; // what is still on this tab (not voided, not moved away)
+              const notes = [
+                i.voidedQuantity > 0 && `${i.voidedQuantity} voided`,
+                i.movedQuantity > 0 && `${i.movedQuantity} moved to ${i.movedTo.join(', ')}`,
+                i.swappedFrom && `moved from ${i.swappedFrom}`,
+              ].filter(Boolean).join(', ');
               const canFollow = b.status === 'ACTIVE' && i.kitchen && left > 0;
               return (
                 <div key={i.id} className={`text-sm flex items-center gap-2 rounded px-1 transition-colors ${flashId === i.id ? 'bg-warning/40' : ''}`}>
                   <span className={`flex-1 ${left === 0 ? 'line-through opacity-50' : ''}`}>
-                    {left === 0 ? i.quantity : left}x {i.name}{i.voidedQuantity > 0 && left > 0 ? ` (${i.voidedQuantity} voided)` : ''}
+                    {left === 0 ? i.quantity : left}x {i.name}{notes ? ` (${notes})` : ''}
                   </span>
                   <span>{php(left * i.unitPriceCents)}</span>
                   {canFollow && (
                     <button className="btn btn-xs btn-outline" disabled={busy === i.id} onClick={() => followUp(i)}>Follow up</button>
+                  )}
+                  {onSwap && left > 0 && (
+                    <button className="btn btn-xs btn-outline btn-info" onClick={() => onSwap(i)}>Swap</button>
                   )}
                   {onVoid && left > 0 && (
                     <button className="btn btn-xs btn-outline btn-error" onClick={() => onVoid(i)}>Void</button>

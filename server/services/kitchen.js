@@ -1,5 +1,6 @@
 const { branchId, nowIso } = require('../db');
 const { queue } = require('./outbox');
+const { MOVED_TO_SQL, SWAPPED_FROM_SQL } = require('./itemSql');
 
 class KitchenError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -25,7 +26,8 @@ function listOrders(db, status) {
      ORDER BY ${order}`).all(st, branchId(db));
 
   const itemsOf = db.prepare(`
-    SELECT n.id, n.item_name, n.quantity, n.net_quantity, n.notes
+    SELECT n.id, n.item_name, n.quantity, n.net_quantity, n.notes, n.voided_quantity, n.moved_quantity,
+           ${MOVED_TO_SQL} AS moved_to, ${SWAPPED_FROM_SQL} AS swapped_from
       FROM order_items oi
       JOIN v_order_items_net n ON n.id = oi.id
       JOIN menu_items m ON m.id = oi.menu_item_id
@@ -38,7 +40,8 @@ function listOrders(db, status) {
     createdAt: b.created_at, doneAt: b.done_at, recalledAt: b.recalled_at,
     items: itemsOf.all(b.id).map((i) => ({
       id: i.id, name: i.item_name, quantity: i.quantity, netQuantity: i.net_quantity,
-      voidedQuantity: i.quantity - i.net_quantity, notes: i.notes,
+      voidedQuantity: i.voided_quantity, movedQuantity: i.moved_quantity,
+      movedTo: i.moved_to ? i.moved_to.split(',') : [], swappedFrom: i.swapped_from || null, notes: i.notes,
     })),
   }));
 }
@@ -95,7 +98,7 @@ function followUpFood(db, rt, orderItemId) {
   if (!r) throw new KitchenError(404, 'Item not found');
   if (r.session_status !== 'OPEN') throw new KitchenError(409, 'This table is already closed');
   if (!r.kitchen) throw new KitchenError(422, 'Only food items can be followed up');
-  if (r.net_quantity <= 0) throw new KitchenError(409, 'This item was voided');
+  if (r.net_quantity <= 0) throw new KitchenError(409, 'This item is no longer on this tab');
   if (r.batch_status !== 'ACTIVE') throw new KitchenError(409, 'The kitchen already marked this order done');
   rt.emitAfterCommit('role:kitchen', 'followup:food', {
     itemId: r.id, batchId: r.batch_id, sessionId: r.session_id, tokenNumber: r.token_number, name: r.item_name,

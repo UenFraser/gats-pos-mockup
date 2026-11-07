@@ -1,6 +1,6 @@
 // Cashier's view of one tab (opens from a card on the desktop screen).
 // Look, read what changed, add items, void with approval, clear the bill request, follow up with the kitchen.
-// 6c adds swap; 6d adds checkout.
+// Swap moves an item to another table (not a void). 6d adds checkout.
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -8,6 +8,7 @@ import { useSessionView } from '../lib/useSessionView';
 import { php, timeLocal } from '../lib/format';
 import Changes from './Changes';
 import SessionTab from './SessionTab';
+import SwapDialog from './SwapDialog';
 import VoidDialog from './VoidDialog';
 
 export default function SessionDetail({ sessionId, onClose }) {
@@ -15,6 +16,8 @@ export default function SessionDetail({ sessionId, onClose }) {
   const { session, changes, dismissChanges, reload } = useSessionView(sessionId);
   const [voids, setVoids] = useState([]);
   const [voidItem, setVoidItem] = useState(null);
+  const [swapItem, setSwapItem] = useState(null);
+  const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
   const total = session?.totalCents;
@@ -35,6 +38,7 @@ export default function SessionDetail({ sessionId, onClose }) {
           <button className="btn btn-sm btn-circle" onClick={onClose}>x</button>
         </div>
         {error && <div className="alert alert-error text-sm">{error}</div>}
+        {notice && <div className="alert alert-success text-sm">{notice}</div>}
         {!session && <p className="opacity-60">Loading...</p>}
         {session && (
           <>
@@ -45,7 +49,7 @@ export default function SessionDetail({ sessionId, onClose }) {
               </div>
             )}
             <Changes changes={changes} onDismiss={dismissChanges} />
-            <SessionTab session={session} onError={setError} onVoid={setVoidItem} />
+            <SessionTab session={session} onError={setError} onVoid={setVoidItem} onSwap={setSwapItem} />
             <div>
               <button className="btn btn-sm btn-primary" onClick={() => navigate(`/desktop/order?token=${session.tokenId}`)}>Add items</button>
             </div>
@@ -63,6 +67,10 @@ export default function SessionDetail({ sessionId, onClose }) {
         )}
       </div>
       <div className="modal-backdrop" onClick={onClose} />
+      {swapItem && session && (
+        <SwapDialog session={session} item={swapItem} onClose={() => setSwapItem(null)}
+          onDone={(to) => { setSwapItem(null); setNotice(`Moved to ${to}`); reload(); }} />
+      )}
       {voidItem && (
         <VoidDialog sessionId={sessionId} item={voidItem} onClose={() => setVoidItem(null)}
           onDone={() => { setVoidItem(null); reload(); }} />

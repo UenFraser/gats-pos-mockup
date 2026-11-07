@@ -17,6 +17,7 @@ const { registerSessionRoutes } = require('./routes/sessions');
 const { registerKitchenRoutes } = require('./routes/kitchen');
 const { registerVoidRoutes } = require('./routes/voids');
 const { registerApprovalRoutes } = require('./routes/approval');
+const { registerSwapRoutes } = require('./routes/swaps');
 const { registerPrintRoutes } = require('./printing/routes');
 
 // config comes from server/config.js (makeConfig)
@@ -44,6 +45,7 @@ async function startServer(config) {
   registerKitchenRoutes(app, db, rt);
   registerVoidRoutes(app, db, rt);
   registerApprovalRoutes(app, db);
+  registerSwapRoutes(app, db, rt);
   registerPrintRoutes(app);
 
   // Unknown /api paths get JSON 404 (not the React page).

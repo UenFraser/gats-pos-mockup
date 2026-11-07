@@ -7,7 +7,7 @@ import { php } from '../lib/format';
 const REASONS = ['Customer cancelled', 'Wrong order', 'Kitchen error', 'Out of stock', 'Other'];
 
 export default function VoidDialog({ sessionId, item, onClose, onDone }) {
-  const left = item.quantity - item.voidedQuantity;
+  const left = item.netQuantity;
   const [qty, setQty] = useState(1);
   const [preset, setPreset] = useState(REASONS[0]);
   const [custom, setCustom] = useState('');
