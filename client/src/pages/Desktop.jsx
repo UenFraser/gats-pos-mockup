@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Shell from '../components/Shell';
+import IceBoard from '../components/IceBoard';
 import NotifDots from '../components/NotifDots';
 import QrCard from '../components/QrCard';
 import SessionDetail from '../components/SessionDetail';
@@ -11,6 +12,7 @@ import { play } from '../lib/sounds';
 import { php } from '../lib/format';
 import { timeAgo } from '../lib/timeAgo';
 import { useSoundUnlock } from '../lib/useSoundUnlock';
+import { useAuth } from '../auth/AuthContext';
 
 const SOUND_FOR = { ADD: 'newOrder', VOID: 'voidsfx', SWAP: 'swap' };
 const REFRESH = ['session:updated', 'token:changed', 'session:bill-cleared', 'session:closed', 'connect'];
@@ -22,6 +24,7 @@ export default function Desktop() {
   const [error, setError] = useState('');
   const [, setTick] = useState(0);
   const needTap = useSoundUnlock();
+  const { user } = useAuth();
 
   const load = useCallback(() => {
     api.get('/api/sessions').then((d) => { setSessions(d.sessions); setError(''); }).catch((e) => setError(e.message));
@@ -49,10 +52,13 @@ export default function Desktop() {
       <div className="flex gap-2 mb-4">
         <Link to="/desktop/order" className="btn btn-primary btn-sm">New order</Link>
         <button className="btn btn-sm" onClick={() => setShowQr((v) => !v)}>{showQr ? 'Hide' : 'Connect phones'}</button>
+        {user.role === 'MANAGER' && <Link to="/desktop/settings" className="btn btn-sm">Settings</Link>}
       </div>
       {showQr && <div className="mb-4"><QrCard /></div>}
       {needTap && <div className="alert alert-warning mb-4 font-semibold">Tap anywhere on this screen to turn the sound on.</div>}
       {error && <div className="alert alert-error mb-4 text-sm">{error}</div>}
+
+      <div className="mb-4 max-w-xl"><IceBoard sound /></div>
 
       {sessions && sessions.length === 0 && <p className="text-center text-xl font-bold opacity-50 py-24">No open tabs</p>}
 

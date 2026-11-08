@@ -8,6 +8,7 @@ const log = require('./log');
 const { createRealtime } = require('./realtime');
 const { socketAuth } = require('./services/auth');
 const { backupDb } = require('./services/backup');
+const { setReceiptsDir } = require('./services/printing');
 const { lanAddresses } = require('./services/network');
 const { registerAuthRoutes } = require('./routes/auth');
 const { registerSystemRoutes } = require('./routes/system');
@@ -18,12 +19,17 @@ const { registerKitchenRoutes } = require('./routes/kitchen');
 const { registerVoidRoutes } = require('./routes/voids');
 const { registerApprovalRoutes } = require('./routes/approval');
 const { registerSwapRoutes } = require('./routes/swaps');
+const { registerCheckoutRoutes } = require('./routes/checkout');
+const { registerSettingsRoutes } = require('./routes/settings');
+const { registerDiscountRoutes } = require('./routes/discounts');
+const { registerIceRoutes } = require('./routes/ice');
 const { registerPrintRoutes } = require('./printing/routes');
 
 // config comes from server/config.js (makeConfig)
 async function startServer(config) {
   const db = openDb(config.dataDir);
   seed(db);
+  setReceiptsDir(path.join(config.dataDir, 'receipts'));
 
   // Backup is best-effort: a failed backup must never stop the restaurant from opening.
   try { await backupDb(db, config.backupDir, config.keepBackups); }
@@ -46,6 +52,10 @@ async function startServer(config) {
   registerVoidRoutes(app, db, rt);
   registerApprovalRoutes(app, db);
   registerSwapRoutes(app, db, rt);
+  registerCheckoutRoutes(app, db, rt);
+  registerSettingsRoutes(app, db);
+  registerDiscountRoutes(app, db, rt);
+  registerIceRoutes(app, db, rt);
   registerPrintRoutes(app);
 
   // Unknown /api paths get JSON 404 (not the React page).

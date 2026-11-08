@@ -21,7 +21,7 @@ function seed(db) {
     for (const i of menu.items) insItem.run(newId(), catIds[i.category], i.name, i.price_cents, i.is_available);
 
     const insTok = db.prepare('INSERT INTO tokens (id, branch_id, token_number, zone) VALUES (?, ?, ?, ?)');
-    for (const [prefix, zone] of [['T', 'RESTAURANT'], ['B', 'BAR'], ['R', 'TAKEOUT']])
+    for (const [prefix, zone] of [['R', 'RESTAURANT'], ['B', 'BAR'], ['T', 'TAKEOUT']])
       for (let n = 1; n <= 15; n++) insTok.run(newId(), branchId, `${prefix}${n}`, zone);
   })();
 }

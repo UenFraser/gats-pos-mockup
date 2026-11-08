@@ -12,6 +12,9 @@ const MIGRATIONS = [
   require('./migrations/005_notifications'),
   require('./migrations/006_approval_pin'),
   require('./migrations/007_swaps'),
+  require('./migrations/008_payments_tendered'),
+  require('./migrations/009_billing'),
+  require('./migrations/010_ice'),
 ];
 
 function migrate(db) {

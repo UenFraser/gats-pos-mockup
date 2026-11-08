@@ -2,6 +2,7 @@
 // The kitchen only reads (REST) and listens (events); it never sends business events.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Shell from '../components/Shell';
+import KitchenIce from '../components/KitchenIce';
 import KitchenNav from '../components/KitchenNav';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
@@ -65,6 +66,7 @@ export default function Kitchen() {
   return (
     <Shell title="Kitchen" wide>
       <KitchenNav />
+      <KitchenIce />
       {needTap && <div className="alert alert-warning mb-4 font-semibold">Tap anywhere on this screen to turn the sound on.</div>}
       {error && <div className="alert alert-error mb-4 text-sm">{error}</div>}
 

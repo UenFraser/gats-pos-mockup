@@ -1,6 +1,7 @@
 const { branchId } = require('../db');
 const { unreadCounts, listUnread } = require('./notifications');
 const { MOVED_TO_SQL, SWAPPED_FROM_SQL } = require('./itemSql');
+const { billOf } = require('./totals');
 
 // Money comes from v_order_items_net (migration 001): quantity minus voids, times the price copied at order time.
 // audience = 'CASHIER' or 'WAITER': whose unread notifications to count (see notifications.js)
@@ -61,6 +62,7 @@ function getSession(db, id, audience) {
       if (r.batch_status !== 'CANCELLED') totalCents += r.net_quantity * r.unit_price_cents;
     }
   }
+  const bill = billOf(db, id);
   return {
     id: s.id, tokenId: s.token_id, tokenNumber: s.token_number, zone: s.zone, status: s.status,
     businessDate: s.business_date, openedAt: s.created_at,
@@ -69,7 +71,7 @@ function getSession(db, id, audience) {
     billRequestedBy: s.bill_requested_by
       ? db.prepare('SELECT display_name FROM users WHERE id = ?').pluck().get(s.bill_requested_by) : null,
     notifications: listUnread(db, id, audience), // unread for the viewer; the screen shows them, then marks them read
-    totalCents, batches,
+    totalCents, bill, discount: bill.discount, batches,
   };
 }
 
