@@ -9,7 +9,9 @@ import { php, timeLocal } from '../lib/format';
 import Changes from './Changes';
 import SessionTab from './SessionTab';
 import BillLines, { hasExtras } from './BillLines';
+import CancelTakeoutDialog from './CancelTakeoutDialog';
 import CheckoutDialog from './CheckoutDialog';
+import CustomerBanner from './CustomerBanner';
 import DiscountDialog from './DiscountDialog';
 import SwapDialog from './SwapDialog';
 import VoidDialog from './VoidDialog';
@@ -22,6 +24,7 @@ export default function SessionDetail({ sessionId, onClose }) {
   const [swapItem, setSwapItem] = useState(null);
   const [notice, setNotice] = useState('');
   const [checkout, setCheckout] = useState(false);
+  const [cancelTakeout, setCancelTakeout] = useState(false);
   const [discountMode, setDiscountMode] = useState(null); // 'apply' | 'remove' | null
   const [printing, setPrinting] = useState(false);
   const [error, setError] = useState('');
@@ -63,6 +66,7 @@ export default function SessionDetail({ sessionId, onClose }) {
                 <button className="btn btn-sm" onClick={clearBill}>Mark handled</button>
               </div>
             )}
+            <CustomerBanner session={session} onError={setError} />
             <Changes changes={changes} onDismiss={dismissChanges} />
             {session.status !== 'OPEN' && <div className="alert alert-info text-sm">This tab is closed.</div>}
             <SessionTab session={session} onError={setError}
@@ -83,7 +87,8 @@ export default function SessionDetail({ sessionId, onClose }) {
                 <button className="btn btn-sm" onClick={() => setDiscountMode(session.discount ? 'remove' : 'apply')}>
                   {session.discount ? 'Remove discount' : 'Discount'}
                 </button>
-                <button className="btn btn-sm btn-success ml-auto" onClick={() => setCheckout(true)}>Checkout</button>
+                {session.zone === 'TAKEOUT' && <button className="btn btn-sm btn-outline btn-error" onClick={() => setCancelTakeout(true)}>Cancel order</button>}
+                <button className="btn btn-sm btn-success ml-auto" onClick={() => setCheckout(true)}>{session.zone === 'TAKEOUT' ? 'Pay and hand over' : 'Checkout'}</button>
               </div>
             )}
             {voids.length > 0 && (
@@ -100,6 +105,9 @@ export default function SessionDetail({ sessionId, onClose }) {
         )}
       </div>
       <div className="modal-backdrop" onClick={onClose} />
+      {cancelTakeout && session && (
+        <CancelTakeoutDialog session={session} onClose={() => setCancelTakeout(false)} onDone={() => { setCancelTakeout(false); onClose(); }} />
+      )}
       {discountMode && session && (
         <DiscountDialog session={session} mode={discountMode} onClose={() => setDiscountMode(null)}
           onDone={() => { setDiscountMode(null); reload(); }} />

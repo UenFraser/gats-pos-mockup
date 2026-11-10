@@ -23,6 +23,8 @@ const { registerCheckoutRoutes } = require('./routes/checkout');
 const { registerSettingsRoutes } = require('./routes/settings');
 const { registerDiscountRoutes } = require('./routes/discounts');
 const { registerIceRoutes } = require('./routes/ice');
+const { registerReservationRoutes } = require('./routes/reservations');
+const { registerTakeoutRoutes } = require('./routes/takeouts');
 const { registerPrintRoutes } = require('./printing/routes');
 
 // config comes from server/config.js (makeConfig)
@@ -56,6 +58,8 @@ async function startServer(config) {
   registerSettingsRoutes(app, db);
   registerDiscountRoutes(app, db, rt);
   registerIceRoutes(app, db, rt);
+  registerReservationRoutes(app, db, rt);
+  registerTakeoutRoutes(app, db, rt);
   registerPrintRoutes(app);
 
   // Unknown /api paths get JSON 404 (not the React page).

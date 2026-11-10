@@ -3,6 +3,7 @@ const { getOrderableItem } = require('./menu');
 const { businessDate } = require('./businessTime');
 const { queue } = require('./outbox');
 const { notify } = require('./notifications');
+const { parseTakeout } = require('./takeouts');
 
 class OrderError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -34,13 +35,14 @@ function validate(body) {
     const notes = typeof l.notes === 'string' && l.notes.trim() ? l.notes.trim().slice(0, 200) : null;
     return { menuItemId: l.menuItemId, quantity: l.quantity, notes };
   });
-  return { tokenId: body.tokenId, requestId, lines };
+  const takeout = body.takeout ? parseTakeout(body.takeout) : null; // only used when a takeout tab is being opened
+  return { tokenId: body.tokenId, requestId, lines, takeout };
 }
 
 // Adds ONE new batch to the token's session (opening the session if the token is free).
 // `user` comes from the login token. Prices and names come from the menu table.
 function placeOrder(db, rt, user, body) {
-  const { tokenId, requestId, lines } = validate(body);
+  const { tokenId, requestId, lines, takeout } = validate(body);
 
   const dedupeKey = requestId && `${user.id}:${requestId}`;
   if (dedupeKey && recent.has(dedupeKey)) return { ...recent.get(dedupeKey).result, duplicate: true };
@@ -60,14 +62,20 @@ function placeOrder(db, rt, user, body) {
     let opened = false;
     if (!session) {
       const id = newId();
-      db.prepare("INSERT INTO sessions (id, branch_id, token_id, status, business_date, opened_by) VALUES (?, ?, ?, 'OPEN', ?, ?)")
-        .run(id, branchId(db), token.id, businessDate(new Date(now)), user.id);
+      const isTakeout = token.zone === 'TAKEOUT';
+      if (isTakeout && !takeout) throw new OrderError(422, 'A takeout order needs the customer name');
+      db.prepare(`INSERT INTO sessions (id, branch_id, token_id, status, business_date, opened_by, customer_name, customer_phone, order_source, pickup_at)
+                  VALUES (?, ?, ?, 'OPEN', ?, ?, ?, ?, ?, ?)`)
+        .run(id, branchId(db), token.id, businessDate(new Date(now)), user.id,
+          isTakeout ? takeout.name : null, isTakeout ? takeout.phone : null, isTakeout ? takeout.source : null, isTakeout ? takeout.pickupAt : null);
       session = { id };
       opened = true;
       queue(db, 'session', 'sessions', id, 'insert');
     } else {
       // Ordering on an existing tab (a RESERVED token becomes OPEN when seated).
-      db.prepare("UPDATE sessions SET status = 'OPEN', updated_at = ? WHERE id = ?").run(now, session.id);
+      // Seating a reservation: the business day becomes the day the guests actually sit down.
+      db.prepare("UPDATE sessions SET business_date = CASE WHEN status = 'RESERVED' THEN ? ELSE business_date END, status = 'OPEN', updated_at = ? WHERE id = ?")
+        .run(businessDate(new Date(now)), now, session.id);
       queue(db, 'session', 'sessions', session.id, 'update');
     }
 

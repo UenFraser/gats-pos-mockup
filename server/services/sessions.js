@@ -1,6 +1,6 @@
 const { branchId } = require('../db');
 const { unreadCounts, listUnread } = require('./notifications');
-const { MOVED_TO_SQL, SWAPPED_FROM_SQL } = require('./itemSql');
+const { MOVED_TO_SQL, SWAPPED_FROM_SQL, HAS_KITCHEN_ITEM_SQL } = require('./itemSql');
 const { billOf } = require('./totals');
 
 // Money comes from v_order_items_net (migration 001): quantity minus voids, times the price copied at order time.
@@ -9,6 +9,8 @@ function listOpenSessions(db, audience) {
   const counts = unreadCounts(db, audience);
   return db.prepare(`
     SELECT s.id, s.token_id, t.token_number, t.zone, s.status, s.created_at, s.bill_requested_at,
+           s.customer_name, s.customer_phone, s.order_source, s.pickup_at,
+           (SELECT COUNT(*) FROM order_batches b WHERE b.session_id = s.id AND b.status = 'ACTIVE' AND ${HAS_KITCHEN_ITEM_SQL}) AS kitchen_pending,
            u.display_name AS opened_by_name,
            COALESCE((SELECT SUM(n.net_amount_cents) FROM order_batches b JOIN v_order_items_net n ON n.batch_id = b.id
                       WHERE b.session_id = s.id AND b.status != 'CANCELLED'), 0) AS total_cents,
@@ -21,6 +23,8 @@ function listOpenSessions(db, audience) {
      ORDER BY s.created_at`).all(branchId(db)).map((r) => ({
     id: r.id, tokenId: r.token_id, tokenNumber: r.token_number, zone: r.zone, status: r.status,
     openedAt: r.created_at, openedBy: r.opened_by_name, billRequestedAt: r.bill_requested_at, unread: counts.get(r.id) || {},
+    customerName: r.customer_name, customerPhone: r.customer_phone, orderSource: r.order_source, pickupAt: r.pickup_at,
+    ready: r.kitchen_pending === 0, // takeouts: everything for the kitchen is done
     totalCents: r.total_cents, itemCount: r.item_count,
   }));
 }
@@ -65,6 +69,9 @@ function getSession(db, id, audience) {
   const bill = billOf(db, id);
   return {
     id: s.id, tokenId: s.token_id, tokenNumber: s.token_number, zone: s.zone, status: s.status,
+    customerName: s.customer_name, customerPhone: s.customer_phone, orderSource: s.order_source, pickupAt: s.pickup_at,
+    partySize: s.party_size, reservationTime: s.reservation_time,
+    ready: db.prepare(`SELECT COUNT(*) FROM order_batches b WHERE b.session_id = ? AND b.status = 'ACTIVE' AND ${HAS_KITCHEN_ITEM_SQL}`).pluck().get(id) === 0,
     businessDate: s.business_date, openedAt: s.created_at,
     reservationName: s.reservation_name, reservationFeeCents: s.reservation_fee_cents,
     billRequestedAt: s.bill_requested_at,

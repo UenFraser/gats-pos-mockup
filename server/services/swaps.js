@@ -44,6 +44,7 @@ function swapItem(db, rt, user, sessionId, body) {
     let session = db.prepare("SELECT id, status FROM sessions WHERE token_id = ? AND status IN ('RESERVED','OPEN')").get(dest.id);
     let opened = false;
     if (!session) {
+      if (dest.zone === 'TAKEOUT') throw new HttpError(422, 'Start the takeout order first (it needs the customer name), then move the item');
       const id = newId();
       db.prepare("INSERT INTO sessions (id, branch_id, token_id, status, business_date, opened_by) VALUES (?, ?, ?, 'OPEN', ?, ?)")
         .run(id, branchId(db), dest.id, businessDate(new Date(now)), user.id);
@@ -51,7 +52,8 @@ function swapItem(db, rt, user, sessionId, body) {
       opened = true;
       queue(db, 'session', 'sessions', id, 'insert');
     } else {
-      db.prepare("UPDATE sessions SET status = 'OPEN', updated_at = ? WHERE id = ?").run(now, session.id);
+      db.prepare("UPDATE sessions SET business_date = CASE WHEN status = 'RESERVED' THEN ? ELSE business_date END, status = 'OPEN', updated_at = ? WHERE id = ?")
+        .run(businessDate(new Date(now)), now, session.id);
       queue(db, 'session', 'sessions', session.id, 'update');
     }
 

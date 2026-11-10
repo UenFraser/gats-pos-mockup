@@ -17,7 +17,7 @@ function registerSettingsRoutes(app, db) {
   };
 
   app.get('/api/settings/print', ...guard, handle(() => ({ settings: getPrintSettings(db) })));
-  app.put('/api/settings/print', ...guard, handle((req) => ({ success: true, settings: setPrintSettings(db, req.body) })));
+  app.patch('/api/settings/print', ...guard, handle((req) => ({ success: true, settings: setPrintSettings(db, req.body) })));
   app.get('/api/settings/billing', ...guard, handle(() => ({ settings: getBillingSettings(db) })));
   app.patch('/api/settings/billing', ...guard, handle((req) => ({ success: true, settings: setBillingSettings(db, req.body) })));
   app.post('/api/settings/print/test', ...guard, handle(async () => {

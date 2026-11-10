@@ -1,21 +1,22 @@
-// Cashier home: every open tab as a card, with colored change counts, BILL requests, and sounds.
+// Cashier home: ice, today's reservations, takeouts (their own section), and tables.
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Shell from '../components/Shell';
 import IceBoard from '../components/IceBoard';
 import NotifDots from '../components/NotifDots';
 import QrCard from '../components/QrCard';
+import ReservationsBoard from '../components/ReservationsBoard';
 import SessionDetail from '../components/SessionDetail';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
 import { play } from '../lib/sounds';
-import { php } from '../lib/format';
+import { php, timeLocal } from '../lib/format';
 import { timeAgo } from '../lib/timeAgo';
 import { useSoundUnlock } from '../lib/useSoundUnlock';
 import { useAuth } from '../auth/AuthContext';
 
 const SOUND_FOR = { ADD: 'newOrder', VOID: 'voidsfx', SWAP: 'swap' };
-const REFRESH = ['session:updated', 'token:changed', 'session:bill-cleared', 'session:closed', 'connect'];
+const REFRESH = ['session:updated', 'token:changed', 'session:bill-cleared', 'session:closed', 'kitchen:order-done', 'kitchen:order-recalled', 'takeout:ready', 'connect'];
 
 export default function Desktop() {
   const [sessions, setSessions] = useState(null);
@@ -47,6 +48,9 @@ export default function Desktop() {
     };
   }, [load]);
 
+  const takeouts = (sessions || []).filter((s) => s.zone === 'TAKEOUT');
+  const tables = (sessions || []).filter((s) => s.zone !== 'TAKEOUT');
+
   return (
     <Shell title="Desktop" wide>
       <div className="flex gap-2 mb-4">
@@ -58,12 +62,34 @@ export default function Desktop() {
       {needTap && <div className="alert alert-warning mb-4 font-semibold">Tap anywhere on this screen to turn the sound on.</div>}
       {error && <div className="alert alert-error mb-4 text-sm">{error}</div>}
 
-      <div className="mb-4 max-w-xl"><IceBoard sound /></div>
+      <div className="grid gap-4 lg:grid-cols-2 mb-6">
+        <IceBoard sound />
+        <ReservationsBoard />
+      </div>
 
-      {sessions && sessions.length === 0 && <p className="text-center text-xl font-bold opacity-50 py-24">No open tabs</p>}
+      <h2 className="font-semibold text-sm mb-2">Takeouts</h2>
+      {sessions && takeouts.length === 0 && <p className="text-xs opacity-60 mb-4">No takeout orders waiting.</p>}
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 mb-6">
+        {takeouts.map((s) => (
+          <button key={s.id} onClick={() => setOpenId(s.id)}
+            className={`card bg-base-100 border-2 p-3 text-left gap-1 ${s.ready ? 'border-success' : 'border-base-300'}`}>
+            <div className="flex justify-between items-center">
+              <span className="text-xl font-black">{s.tokenNumber}</span>
+              <span className={`badge badge-sm ${s.orderSource === 'ONLINE' ? 'badge-secondary' : 'badge-accent'}`}>{s.orderSource === 'ONLINE' ? 'Online' : 'Local'}</span>
+            </div>
+            <span className="font-semibold truncate">{s.customerName}</span>
+            <span className="text-lg font-semibold">{php(s.totalCents)}</span>
+            <span className="text-xs opacity-60">{timeAgo(s.openedAt)}{s.pickupAt ? ` · pickup ${timeLocal(s.pickupAt)}` : ''}</span>
+            <span className={`badge badge-sm ${s.ready ? 'badge-success animate-pulse' : 'badge-warning'}`}>{s.ready ? 'READY for pickup' : 'Preparing'}</span>
+            <NotifDots unread={s.unread} billRequested={!!s.billRequestedAt} />
+          </button>
+        ))}
+      </div>
 
+      <h2 className="font-semibold text-sm mb-2">Tables</h2>
+      {sessions && tables.length === 0 && <p className="text-xs opacity-60">No open tabs.</p>}
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
-        {(sessions || []).map((s) => {
+        {tables.map((s) => {
           const hot = s.billRequestedAt || Object.values(s.unread).some((n) => n > 0);
           return (
             <button key={s.id} onClick={() => setOpenId(s.id)}

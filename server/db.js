@@ -15,6 +15,7 @@ const MIGRATIONS = [
   require('./migrations/008_payments_tendered'),
   require('./migrations/009_billing'),
   require('./migrations/010_ice'),
+  require('./migrations/011_takeouts_reservations'),
 ];
 
 function migrate(db) {

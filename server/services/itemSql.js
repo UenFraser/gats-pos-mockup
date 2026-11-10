@@ -10,4 +10,9 @@ const SWAPPED_FROM_SQL = `(SELECT ft.token_number
                              JOIN sessions fs ON fs.id = tr.from_session_id
                              JOIN tokens ft ON ft.id = fs.token_id
                             WHERE tr.to_item_id = n.id)`;
-module.exports = { MOVED_TO_SQL, SWAPPED_FROM_SQL };
+// Batch `b` has at least one item that goes to the kitchen.
+const HAS_KITCHEN_ITEM_SQL = `EXISTS (SELECT 1 FROM order_items koi
+                                      JOIN menu_items km ON km.id = koi.menu_item_id
+                                      JOIN categories kc ON kc.id = km.category_id
+                                     WHERE koi.batch_id = b.id AND kc.kitchen = 1)`;
+module.exports = { MOVED_TO_SQL, SWAPPED_FROM_SQL, HAS_KITCHEN_ITEM_SQL };

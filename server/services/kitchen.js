@@ -17,7 +17,8 @@ function listOrders(db, status) {
   // Oldest first for active orders (nothing gets buried); most recently finished first for history.
   const order = st === 'ACTIVE' ? 'b.created_at ASC' : 'b.done_at DESC LIMIT 100';
   const batches = db.prepare(`
-    SELECT b.id, b.session_id, b.created_at, b.done_at, b.recalled_at, u.display_name AS staff, t.token_number, t.zone
+    SELECT b.id, b.session_id, b.created_at, b.done_at, b.recalled_at, u.display_name AS staff, t.token_number, t.zone,
+           s.customer_name, s.order_source, s.pickup_at
       FROM order_batches b
       JOIN sessions s ON s.id = b.session_id
       JOIN tokens t ON t.id = s.token_id
@@ -38,6 +39,7 @@ function listOrders(db, status) {
   return batches.map((b) => ({
     id: b.id, sessionId: b.session_id, tokenNumber: b.token_number, zone: b.zone, staff: b.staff,
     createdAt: b.created_at, doneAt: b.done_at, recalledAt: b.recalled_at,
+    takeout: b.zone === 'TAKEOUT' ? { name: b.customer_name, source: b.order_source, pickupAt: b.pickup_at } : null,
     items: itemsOf.all(b.id).map((i) => ({
       id: i.id, name: i.item_name, quantity: i.quantity, netQuantity: i.net_quantity,
       voidedQuantity: i.voided_quantity, movedQuantity: i.moved_quantity,
@@ -46,9 +48,14 @@ function listOrders(db, status) {
   }));
 }
 
+// Batches of a tab the kitchen has not finished yet.
+function pendingKitchenBatches(db, sessionId) {
+  return db.prepare(`SELECT COUNT(*) FROM order_batches b WHERE b.session_id = ? AND b.status = 'ACTIVE' AND ${HAS_KITCHEN_ITEM}`).pluck().get(sessionId);
+}
+
 function findBatch(db, id) {
   return db.prepare(`
-    SELECT b.id, b.status, b.session_id, t.token_number
+    SELECT b.id, b.status, b.session_id, t.token_number, t.zone, s.customer_name
       FROM order_batches b JOIN sessions s ON s.id = b.session_id JOIN tokens t ON t.id = s.token_id
      WHERE b.id = ? AND s.status = 'OPEN' AND s.branch_id = ?`).get(id, branchId(db));
 }
@@ -63,6 +70,12 @@ function markDone(db, rt, user, batchId) {
     queue(db, 'order_batch', 'order_batches', batchId, 'update');
     rt.emitAfterCommit(['role:kitchen', 'role:waiter'], 'kitchen:order-done',
       { batchId, sessionId: b.session_id, tokenNumber: b.token_number });
+    if (b.zone === 'TAKEOUT') {
+      // The cashier needs to know when a takeout is ready for the customer.
+      rt.emitAfterCommit(['role:cashier', 'role:waiter'], 'session:updated', { sessionId: b.session_id, reason: 'kitchen' });
+      if (pendingKitchenBatches(db, b.session_id) === 0)
+        rt.emitAfterCommit(['role:cashier', 'role:waiter'], 'takeout:ready', { sessionId: b.session_id, tokenNumber: b.token_number, customerName: b.customer_name });
+    }
     return { success: true };
   });
 }
@@ -77,6 +90,7 @@ function recall(db, rt, user, batchId) {
     queue(db, 'order_batch', 'order_batches', batchId, 'update');
     rt.emitAfterCommit(['role:kitchen', 'role:waiter'], 'kitchen:order-recalled',
       { batchId, sessionId: b.session_id, tokenNumber: b.token_number });
+    if (b.zone === 'TAKEOUT') rt.emitAfterCommit(['role:cashier', 'role:waiter'], 'session:updated', { sessionId: b.session_id, reason: 'kitchen' });
     return { success: true };
   });
 }
@@ -106,4 +120,4 @@ function followUpFood(db, rt, orderItemId) {
   return { success: true, itemId: r.id };
 }
 
-module.exports = { KitchenError, listOrders, markDone, recall, followUpFood };
+module.exports = { KitchenError, listOrders, markDone, recall, followUpFood, pendingKitchenBatches };

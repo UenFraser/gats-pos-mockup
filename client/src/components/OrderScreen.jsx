@@ -9,6 +9,7 @@ import { connectSocket } from '../lib/socket';
 import { newRequestId } from '../lib/requestId';
 import { useSessionView } from '../lib/useSessionView';
 import Changes from './Changes';
+import CustomerBanner from './CustomerBanner';
 import NotifDots from './NotifDots';
 import SessionTab from './SessionTab';
 import SwapDialog from './SwapDialog';
@@ -20,6 +21,16 @@ const ZONE_LABEL = { RESTAURANT: 'Restaurant', BAR: 'Bar', TAKEOUT: 'Takeout' };
 const STATUS_CLASS = { FREE: 'btn-outline', OPEN: 'btn-warning', RESERVED: 'btn-info' };
 const TOKEN_REFRESH = ['token:changed', 'session:updated', 'session:bill-requested', 'session:bill-cleared', 'session:closed', 'connect'];
 const MAX_QTY = 99;
+
+// "HH:MM" (today, or tomorrow if that time has clearly passed) -> ISO, or undefined when left empty.
+function pickupIso(hm) {
+  if (!hm) return undefined;
+  const [h, m] = hm.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  if (d.getTime() < Date.now() - 30 * 60000) d.setDate(d.getDate() + 1);
+  return d.toISOString();
+}
 
 export default function OrderScreen() {
   const [tokens, setTokens] = useState([]);
@@ -35,6 +46,7 @@ export default function OrderScreen() {
   const requestIdRef = useRef(null); // same id on a retry of the SAME cart, so it is saved once
   const [voidItem, setVoidItem] = useState(null);
   const [swapItem, setSwapItem] = useState(null);
+  const [customer, setCustomer] = useState({ name: '', phone: '', source: 'LOCAL', pickup: '' }); // new takeout only
   const { user } = useAuth();
   const canSwap = user.role !== 'WAITER'; // waiters ask the cashier to swap
   const [params] = useSearchParams();
@@ -85,14 +97,16 @@ export default function OrderScreen() {
   const pickToken = (t) => {
     if (t.id === tokenId) return;
     if (cart.length && !window.confirm('Discard the order you are building?')) return;
-    changeCart(() => []); setNotice(''); setError(''); setTokenId(t.id);
+    changeCart(() => []); setNotice(''); setError(''); setCustomer({ name: '', phone: '', source: 'LOCAL', pickup: '' }); setTokenId(t.id);
   };
 
+  // A free takeout token starts a new takeout: the customer's details go with the first order.
+  const newTakeout = !!token && token.zone === 'TAKEOUT' && token.status === 'FREE';
   const cartTotal = cart.reduce((n, l) => n + l.priceCents * l.quantity, 0);
   const cartCount = cart.reduce((n, l) => n + l.quantity, 0);
 
   async function send() {
-    if (!token || !cart.length || sending) return;
+    if (!token || !cart.length || sending || (newTakeout && !customer.name.trim())) return;
     setSending(true); setError(''); setNotice('');
     if (!requestIdRef.current) requestIdRef.current = newRequestId();
     try {
@@ -100,6 +114,7 @@ export default function OrderScreen() {
         tokenId: token.id,
         requestId: requestIdRef.current,
         items: cart.map((l) => ({ menuItemId: l.menuItemId, quantity: l.quantity })),
+        ...(newTakeout ? { takeout: { name: customer.name, phone: customer.phone, source: customer.source, pickupAt: pickupIso(customer.pickup) } } : {}),
       });
       // Only now, after the server confirmed the save, is it safe to clear the cart.
       requestIdRef.current = null;
@@ -156,14 +171,34 @@ export default function OrderScreen() {
         <p className="text-xs opacity-60">Outlined = free, orange = open tab, blue = reserved. Green/red/blue counts = changes you have not seen.</p>
       </section>
 
+      {token && tab && <CustomerBanner session={tab} onError={setError} />}
       {token && <Changes changes={changes} onDismiss={dismissChanges} />}
+
+      {newTakeout && (
+        <section className="card bg-base-200 p-3 space-y-2">
+          <h3 className="font-semibold text-sm">Takeout customer</h3>
+          <input className="input input-bordered input-sm w-full" placeholder="Customer name (required)" maxLength={60} value={customer.name}
+            onChange={(e) => setCustomer({ ...customer, name: e.target.value })} />
+          <input className="input input-bordered input-sm w-full" placeholder="Phone (optional)" maxLength={30} value={customer.phone}
+            onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} />
+          <div className="flex gap-2 items-center flex-wrap">
+            <button className={`btn btn-xs ${customer.source === 'LOCAL' ? 'btn-accent' : 'btn-outline'}`} onClick={() => setCustomer({ ...customer, source: 'LOCAL' })}>Local (dining in)</button>
+            <button className={`btn btn-xs ${customer.source === 'ONLINE' ? 'btn-secondary' : 'btn-outline'}`} onClick={() => setCustomer({ ...customer, source: 'ONLINE' })}>Online (call or website)</button>
+            <label className="flex items-center gap-1 text-xs ml-auto">Pickup
+              <input className="input input-bordered input-xs" type="time" value={customer.pickup} onChange={(e) => setCustomer({ ...customer, pickup: e.target.value })} />
+            </label>
+          </div>
+        </section>
+      )}
 
       {token && tab && (
         <>
           <SessionTab session={tab} onError={setError} onVoid={setVoidItem} onSwap={canSwap ? setSwapItem : undefined} />
-          <button className="btn btn-sm btn-outline" disabled={!!tab.billRequestedAt} onClick={requestBill}>
-            {tab.billRequestedAt ? 'Bill requested' : 'Request bill'}
-          </button>
+          {tab.status === 'OPEN' && tab.zone !== 'TAKEOUT' && (
+            <button className="btn btn-sm btn-outline" disabled={!!tab.billRequestedAt} onClick={requestBill}>
+              {tab.billRequestedAt ? 'Bill requested' : 'Request bill'}
+            </button>
+          )}
         </>
       )}
 
@@ -214,7 +249,7 @@ export default function OrderScreen() {
 
       {token && cart.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 p-3 bg-base-100 border-t border-base-300">
-          <button className="btn btn-primary w-full" disabled={sending} onClick={send}>
+          <button className="btn btn-primary w-full" disabled={sending || (newTakeout && !customer.name.trim())} onClick={send}>
             {sending ? 'Sending...' : `Send order for ${token.number}: ${cartCount} item${cartCount > 1 ? 's' : ''}, ${php(cartTotal)}`}
           </button>
         </div>

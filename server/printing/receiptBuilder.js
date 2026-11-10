@@ -18,6 +18,7 @@ function buildDocument({ settings, kind, d, openDrawer }) {
   r.text(kind === 'BILL' ? '*** BILL ***' : '*** PAYMENT RECEIPT ***').align('left').line();
 
   r.row(`Token: ${d.session.tokenNumber} (${d.session.zone.toLowerCase()})`, `Server: ${d.session.openedBy || '-'}`);
+  if (d.session.customerName) r.row(`Customer: ${d.session.customerName}`, d.session.orderSource === 'ONLINE' ? 'Online order' : d.session.orderSource === 'LOCAL' ? 'Dine-in order' : '');
   r.row(`Date: ${localText(d.session.closedAt || new Date().toISOString())}`, kind === 'RECEIPT' ? `Cashier: ${d.cashier || '-'}` : '');
   r.line();
   for (const i of d.items) r.row(`${i.quantity} x ${i.name}`, php(i.amountCents));

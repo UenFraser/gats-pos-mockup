@@ -31,7 +31,7 @@ async function send(settings, bytes) {
 
 function loadData(db, sessionId) {
   const s = db.prepare(`
-    SELECT s.id, s.status, s.closed_at, t.token_number, t.zone, uo.display_name AS opened_by, uc.display_name AS closed_by
+    SELECT s.id, s.status, s.closed_at, s.customer_name, s.order_source, t.token_number, t.zone, uo.display_name AS opened_by, uc.display_name AS closed_by
       FROM sessions s JOIN tokens t ON t.id = s.token_id
       LEFT JOIN users uo ON uo.id = s.opened_by LEFT JOIN users uc ON uc.id = s.closed_by
      WHERE s.id = ?`).get(sessionId);
@@ -49,7 +49,7 @@ function loadData(db, sessionId) {
     .map((p) => ({ method: p.method, amountCents: p.amount_cents, tenderedCents: p.tendered_cents }));
   const changeCents = payments.reduce((n, p) => n + (p.method === 'CASH' && p.tenderedCents ? p.tenderedCents - p.amountCents : 0), 0);
   return {
-    session: { tokenNumber: s.token_number, zone: s.zone, openedBy: s.opened_by, closedAt: s.closed_at },
+    session: { tokenNumber: s.token_number, zone: s.zone, openedBy: s.opened_by, closedAt: s.closed_at, customerName: s.customer_name, orderSource: s.order_source },
     items, payments, changeCents, cashier: s.closed_by, bill: billOf(db, sessionId),
   };
 }

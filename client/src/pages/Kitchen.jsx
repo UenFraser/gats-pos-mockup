@@ -7,6 +7,7 @@ import KitchenNav from '../components/KitchenNav';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
 import { play } from '../lib/sounds';
+import { timeLocal } from '../lib/format';
 import { useSoundUnlock } from '../lib/useSoundUnlock';
 
 const FOLLOWUP_MS = 90 * 1000; // how long a followed-up item stays highlighted
@@ -24,6 +25,7 @@ export default function Kitchen() {
   const [orders, setOrders] = useState(null);
   const [error, setError] = useState('');
   const [marked, setMarked] = useState({}); // order item id -> true while highlighted
+  const [markedSessions, setMarkedSessions] = useState({}); // takeout tab id -> true while highlighted
   const [, setTick] = useState(0);
   const needTap = useSoundUnlock();
   const timers = useRef([]);
@@ -44,9 +46,14 @@ export default function Kitchen() {
       setMarked((m) => ({ ...m, [itemId]: true }));
       timers.current.push(setTimeout(() => setMarked((m) => { const c = { ...m }; delete c[itemId]; return c; }), FOLLOWUP_MS));
     };
+    const onFollowUpTakeout = ({ sessionId }) => {
+      play('follow-upFood');
+      setMarkedSessions((m) => ({ ...m, [sessionId]: true }));
+      timers.current.push(setTimeout(() => setMarkedSessions((m) => { const c = { ...m }; delete c[sessionId]; return c; }), FOLLOWUP_MS));
+    };
     const events = {
       'kitchen:order-new': onNew, 'kitchen:order-done': reload, 'kitchen:order-recalled': reload,
-      'followup:food': onFollowUp, 'order:voided': onVoided, 'order:swapped': onSwapped,
+      'followup:food': onFollowUp, 'followup:takeout': onFollowUpTakeout, 'order:voided': onVoided, 'order:swapped': onSwapped,
       'session:closed': reload, connect: reload,
     };
     Object.entries(events).forEach(([e, fn]) => s.on(e, fn));
@@ -74,10 +81,15 @@ export default function Kitchen() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 items-start">
         {(orders || []).map((o) => (
-          <div key={o.id} className="bg-base-100 rounded-2xl shadow-xl border-2 border-base-300 overflow-hidden flex flex-col max-h-[420px]">
-            <div className="px-5 py-3 flex justify-between items-center bg-secondary text-secondary-content shrink-0">
+          <div key={o.id} className={`bg-base-100 rounded-2xl shadow-xl border-2 overflow-hidden flex flex-col max-h-[420px] ${markedSessions[o.sessionId] ? 'border-warning animate-pulse' : 'border-base-300'}`}>
+            <div className={`px-5 py-3 flex justify-between items-center shrink-0 ${o.takeout ? 'bg-accent text-accent-content' : 'bg-secondary text-secondary-content'}`}>
               <div>
-                <p className="font-black text-lg tracking-wider">{o.tokenNumber}</p>
+                <p className="font-black text-lg tracking-wider">{o.tokenNumber}{o.takeout ? ` · ${o.takeout.name}` : ''}</p>
+                {o.takeout && (
+                  <p className="text-xs font-black">
+                    {o.takeout.source === 'ONLINE' ? 'ONLINE' : 'LOCAL'} TAKEOUT{o.takeout.pickupAt ? ` · pickup ${timeLocal(o.takeout.pickupAt)}` : ''}{markedSessions[o.sessionId] ? ' · Follow-up!' : ''}
+                  </p>
+                )}
                 <p className="text-xs font-bold opacity-80">{timeAgo(o.createdAt)} · {o.staff}</p>
               </div>
               <button className="btn btn-sm btn-primary font-bold" onClick={() => done(o.id)}>Done</button>
