@@ -60,6 +60,7 @@ function placeOrder(db, rt, user, body) {
     const now = nowIso();
     let session = db.prepare("SELECT id, status FROM sessions WHERE token_id = ? AND status IN ('RESERVED','OPEN')").get(token.id);
     let opened = false;
+    let seated = false; // a RESERVED tab that this first order turns into an open tab
     if (!session) {
       const id = newId();
       const isTakeout = token.zone === 'TAKEOUT';
@@ -73,6 +74,7 @@ function placeOrder(db, rt, user, body) {
       queue(db, 'session', 'sessions', id, 'insert');
     } else {
       // Ordering on an existing tab (a RESERVED token becomes OPEN when seated).
+      seated = session.status === 'RESERVED';
       // Seating a reservation: the business day becomes the day the guests actually sit down.
       db.prepare("UPDATE sessions SET business_date = CASE WHEN status = 'RESERVED' THEN ? ELSE business_date END, status = 'OPEN', updated_at = ? WHERE id = ?")
         .run(businessDate(new Date(now)), now, session.id);
@@ -110,7 +112,8 @@ function placeOrder(db, rt, user, body) {
     rt.emitAfterCommit(['role:cashier', 'role:waiter'], 'session:updated', {
       sessionId: session.id, tokenId: token.id, tokenNumber: token.token_number, reason: opened ? 'opened' : 'order',
     });
-    if (opened) rt.emitAfterCommit('all', 'token:changed', { tokenId: token.id, status: 'OPEN', sessionId: session.id });
+    if (opened || seated) rt.emitAfterCommit('all', 'token:changed', { tokenId: token.id, status: 'OPEN', sessionId: session.id });
+    if (seated) rt.emitAfterCommit('all', 'reservation:changed', { id: session.id }); // the reservation list updates live
 
     return { success: true, orderId: batchId, sessionId: session.id, tokenNumber: token.token_number, sessionOpened: opened };
   });

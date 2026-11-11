@@ -25,6 +25,8 @@ const { registerDiscountRoutes } = require('./routes/discounts');
 const { registerIceRoutes } = require('./routes/ice');
 const { registerReservationRoutes } = require('./routes/reservations');
 const { registerTakeoutRoutes } = require('./routes/takeouts');
+const { registerSummaryRoutes } = require('./routes/summaries');
+const { refreshSummaries } = require('./services/summary');
 const { registerPrintRoutes } = require('./printing/routes');
 
 // config comes from server/config.js (makeConfig)
@@ -36,6 +38,12 @@ async function startServer(config) {
   // Backup is best-effort: a failed backup must never stop the restaurant from opening.
   try { await backupDb(db, config.backupDir, config.keepBackups); }
   catch (e) { log.error('startup backup failed', e); }
+
+  // Daily summaries: refresh now and every 15 minutes (cheap; finished days are queued for HQ, old local copies pruned).
+  const refresh = () => { try { refreshSummaries(db); } catch (e) { log.error('summary refresh failed', e); } };
+  refresh();
+  const summaryTimer = setInterval(refresh, 15 * 60 * 1000);
+  if (summaryTimer.unref) summaryTimer.unref();
 
   const app = express();
   const httpServer = http.createServer(app);
@@ -60,6 +68,7 @@ async function startServer(config) {
   registerIceRoutes(app, db, rt);
   registerReservationRoutes(app, db, rt);
   registerTakeoutRoutes(app, db, rt);
+  registerSummaryRoutes(app, db);
   registerPrintRoutes(app);
 
   // Unknown /api paths get JSON 404 (not the React page).
@@ -91,7 +100,7 @@ async function startServer(config) {
   return {
     port,
     rt,
-    close: () => { io.close(); db.close(); }, // io.close() also closes the HTTP server
+    close: () => { clearInterval(summaryTimer); io.close(); db.close(); }, // io.close() also closes the HTTP server
   };
 }
 

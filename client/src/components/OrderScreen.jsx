@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
-import { php } from '../lib/format';
+import { php, timeLocal } from '../lib/format';
 import { connectSocket } from '../lib/socket';
 import { newRequestId } from '../lib/requestId';
 import { useSessionView } from '../lib/useSessionView';
@@ -107,6 +107,11 @@ export default function OrderScreen() {
 
   async function send() {
     if (!token || !cart.length || sending || (newTakeout && !customer.name.trim())) return;
+    // A blue (reserved) table: the first order seats the guests, so make sure it is the right table.
+    if (token.status === 'RESERVED') {
+      const who = tab && tab.customerName ? ` for ${tab.customerName}${tab.reservationTime ? ` at ${timeLocal(tab.reservationTime)}` : ''}` : '';
+      if (!window.confirm(`${token.number} is reserved${who}. Seat them and send this order?`)) return;
+    }
     setSending(true); setError(''); setNotice('');
     if (!requestIdRef.current) requestIdRef.current = newRequestId();
     try {

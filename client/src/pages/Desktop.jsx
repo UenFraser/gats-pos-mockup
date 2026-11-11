@@ -56,6 +56,8 @@ export default function Desktop() {
       <div className="flex gap-2 mb-4">
         <Link to="/desktop/order" className="btn btn-primary btn-sm">New order</Link>
         <button className="btn btn-sm" onClick={() => setShowQr((v) => !v)}>{showQr ? 'Hide' : 'Connect phones'}</button>
+        <Link to="/desktop/summary" className="btn btn-sm">Daily summary</Link>
+        {user.role === 'MANAGER' && <Link to="/desktop/staff" className="btn btn-sm">Staff</Link>}
         {user.role === 'MANAGER' && <Link to="/desktop/settings" className="btn btn-sm">Settings</Link>}
       </div>
       {showQr && <div className="mb-4"><QrCard /></div>}

@@ -17,7 +17,9 @@ function registerApprovalRoutes(app, db) {
   };
 
   app.get('/api/approvers', auth, manager, handle(() => ({ approvers: listApprovers(db) })));
-  app.put('/api/users/:id/approval-pin', auth, manager, handle((req) => setApprovalPin(db, req.params.id, req.body && req.body.pin)));
+  const setPin = handle((req) => setApprovalPin(db, req.params.id, req.body && req.body.pin));
+  app.put('/api/users/:id/approval-pin', auth, manager, setPin);   // used by tools/set-approval-pin.ps1
+  app.patch('/api/users/:id/approval-pin', auth, manager, setPin); // used by the Staff screen
   app.delete('/api/users/:id/approval-pin', auth, manager, handle((req) => clearApprovalPin(db, req.params.id)));
 }
 

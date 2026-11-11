@@ -43,6 +43,7 @@ function swapItem(db, rt, user, sessionId, body) {
     const now = nowIso();
     let session = db.prepare("SELECT id, status FROM sessions WHERE token_id = ? AND status IN ('RESERVED','OPEN')").get(dest.id);
     let opened = false;
+    let seated = false;
     if (!session) {
       if (dest.zone === 'TAKEOUT') throw new HttpError(422, 'Start the takeout order first (it needs the customer name), then move the item');
       const id = newId();
@@ -52,6 +53,7 @@ function swapItem(db, rt, user, sessionId, body) {
       opened = true;
       queue(db, 'session', 'sessions', id, 'insert');
     } else {
+      seated = session.status === 'RESERVED';
       db.prepare("UPDATE sessions SET business_date = CASE WHEN status = 'RESERVED' THEN ? ELSE business_date END, status = 'OPEN', updated_at = ? WHERE id = ?")
         .run(businessDate(new Date(now)), now, session.id);
       queue(db, 'session', 'sessions', session.id, 'update');
@@ -91,7 +93,8 @@ function swapItem(db, rt, user, sessionId, body) {
     });
     rt.emitAfterCommit(['role:cashier', 'role:waiter'], 'session:updated', { sessionId, reason: 'swap' });
     rt.emitAfterCommit(['role:cashier', 'role:waiter'], 'session:updated', { sessionId: session.id, reason: 'swap' });
-    if (opened) rt.emitAfterCommit('all', 'token:changed', { tokenId: dest.id, status: 'OPEN', sessionId: session.id });
+    if (opened || seated) rt.emitAfterCommit('all', 'token:changed', { tokenId: dest.id, status: 'OPEN', sessionId: session.id });
+    if (seated) rt.emitAfterCommit('all', 'reservation:changed', { id: session.id });
 
     return { success: true, toSessionId: session.id, toTokenNumber: dest.token_number, transferId };
   });

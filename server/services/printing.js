@@ -7,6 +7,7 @@ const { escposToText } = require('../printing/textPreview');
 const { getPrintSettings } = require('./settings');
 const { billOf } = require('./totals');
 const { HttpError } = require('./errors');
+const { getSummary } = require('./summary');
 const log = require('../log');
 
 // 'file' = no printer yet: each receipt is saved as readable text in the data folder (for testing).
@@ -77,4 +78,35 @@ async function printTest(db) {
   return savedTo ? { printed: true, savedTo } : { printed: true };
 }
 
-module.exports = { printDocument, printTest, setReceiptsDir };
+// The closing slip: the figures a cashier needs to count the drawer and close the night. Never throws.
+async function printSummary(db, date) {
+  try {
+    const s = getSummary(db, date);
+    const settings = getPrintSettings(db);
+    const r = new Receipt(settings.width);
+    r.align('center').bold(true).big(true).text(settings.name).big(false).bold(false).text(`DAILY SUMMARY ${s.businessDate}`).align('left').line();
+    r.row('Tabs closed', String(s.sales.tabs));
+    r.row('Items total', php(s.sales.itemsCents));
+    if (s.sales.discountsCents) r.row('Discounts / VAT exempt', '-' + php(s.sales.discountsCents));
+    if (s.sales.feesCents) r.row('Reservation fees', php(s.sales.feesCents));
+    r.bold(true).row('TOTAL SALES', php(s.sales.totalCents)).bold(false).line();
+    for (const m of s.payments.byMethod) r.row(`${m.method} (${m.count})`, php(m.amountCents));
+    r.bold(true).row('TOTAL PAYMENTS', php(s.payments.totalCents)).bold(false);
+    r.row('Cash AM shift', php(s.payments.cash.byShift.AM)).row('Cash PM shift', php(s.payments.cash.byShift.PM));
+    r.bold(true).row('CASH IN DRAWER (expected)', php(s.payments.cash.amountCents)).bold(false).line();
+    r.row('Voids', `${s.voids.count} / ${php(s.voids.amountCents)}`);
+    for (const d of s.discounts) r.row(`Discount ${d.kind} (${d.count})`, php(d.amountCents));
+    if (s.vat.vatCents || s.vat.vatExemptSalesCents) { r.row('VATable sales', php(s.vat.vatableSalesCents)).row('VAT', php(s.vat.vatCents)).row('VAT-exempt sales', php(s.vat.vatExemptSalesCents)); }
+    if (s.payments.varianceCents !== 0) r.bold(true).text(`CHECK: sales and payments differ by ${php(s.payments.varianceCents)}`).bold(false);
+    if (s.openTabs.count) r.bold(true).text(`STILL OPEN: ${s.openTabs.tokens.join(' ')}`).bold(false);
+    r.line().feed(3).cut();
+    const savedTo = await send(settings, r.toBuffer());
+    return savedTo ? { printed: true, savedTo } : { printed: true };
+  } catch (e) {
+    if (e instanceof HttpError) throw e;
+    log.warn(`print failed (summary): ${e.message}`);
+    return { printed: false, error: String(e.message) };
+  }
+}
+
+module.exports = { printDocument, printTest, printSummary, setReceiptsDir };

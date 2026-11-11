@@ -7,10 +7,8 @@ const path = require('path');
 const BUSINESS = {
   utcOffsetMinutes: 8 * 60,
   dayStartHour: 5,   // the business day rolls over at 5:00 AM (open 10 AM - 11 PM)
+  summaryWindowDays: 10, // the local system keeps daily summaries for the last 10 business days; HQ keeps them all
   pmStartHour: 17,   // AM shift 10:00-17:00, PM shift 17:00 until closing
-  // ASSUMPTION (confirm in Phase 7): a reservation fee paid up front is deducted from the final bill.
-  // Set to false if the fee is kept separate (the customer then pays the full bill).
-  reservationFeeDeducted: true,
 };
 
 function makeConfig({ dataDir, clientDir }) {
