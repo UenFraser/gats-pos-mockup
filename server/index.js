@@ -8,6 +8,9 @@ const log = require('./log');
 const { createRealtime } = require('./realtime');
 const { socketAuth } = require('./services/auth');
 const { backupDb } = require('./services/backup');
+const { extraBackupDir } = require('./services/system');
+const { registerAdminRoutes } = require('./routes/admin');
+const { securityHeaders, rateLimit } = require('./security');
 const { setReceiptsDir } = require('./services/printing');
 const { lanAddresses } = require('./services/network');
 const { registerAuthRoutes } = require('./routes/auth');
@@ -30,14 +33,21 @@ const { refreshSummaries } = require('./services/summary');
 const { registerPrintRoutes } = require('./printing/routes');
 
 // config comes from server/config.js (makeConfig)
-async function startServer(config) {
+// hooks (from the desktop program): { restart(), getAutoStart(), setAutoStart(on) }. Optional.
+async function startServer(config, hooks = {}) {
   const db = openDb(config.dataDir);
   seed(db);
   setReceiptsDir(path.join(config.dataDir, 'receipts'));
 
-  // Backup is best-effort: a failed backup must never stop the restaurant from opening.
-  try { await backupDb(db, config.backupDir, config.keepBackups); }
-  catch (e) { log.error('startup backup failed', e); }
+  // Backups are best-effort: a failed backup must never stop the restaurant from opening or working.
+  // One at start, then every few hours, each also copied to the second location when one is set (Settings > System).
+  const runBackup = async () => {
+    try { await backupDb(db, config.backupDir, config.keepBackups, extraBackupDir(db) || null); }
+    catch (e) { log.error('backup failed', e); }
+  };
+  await runBackup();
+  const backupTimer = setInterval(runBackup, config.backupEveryHours * 3600 * 1000);
+  if (backupTimer.unref) backupTimer.unref();
 
   // Daily summaries: refresh now and every 15 minutes (cheap; finished days are queued for HQ, old local copies pruned).
   const refresh = () => { try { refreshSummaries(db); } catch (e) { log.error('summary refresh failed', e); } };
@@ -46,8 +56,15 @@ async function startServer(config) {
   if (summaryTimer.unref) summaryTimer.unref();
 
   const app = express();
+  app.disable('x-powered-by');
+  app.use(securityHeaders());
+  // Limits per client address. The main terminal itself is never limited; logins are limited for everyone.
+  const apiLimit = rateLimit({ windowMs: 60 * 1000, max: 1200, skipLoopback: true, message: 'Too many requests.' });
+  const loginLimit = rateLimit({ windowMs: 60 * 1000, max: 30, message: 'Too many login attempts.' });
+  app.use('/api', apiLimit);
+  app.use('/api/auth/login', loginLimit);
   const httpServer = http.createServer(app);
-  const io = new Server(httpServer);
+  const io = new Server(httpServer, { maxHttpBufferSize: 1e5 }); // nothing legitimate sends big socket messages
   io.use(socketAuth(db));
   const rt = createRealtime(io);
   const getPort = () => httpServer.address().port;
@@ -69,6 +86,7 @@ async function startServer(config) {
   registerReservationRoutes(app, db, rt);
   registerTakeoutRoutes(app, db, rt);
   registerSummaryRoutes(app, db);
+  registerAdminRoutes(app, db, config, hooks);
   registerPrintRoutes(app);
 
   // Unknown /api paths get JSON 404 (not the React page).
@@ -100,7 +118,7 @@ async function startServer(config) {
   return {
     port,
     rt,
-    close: () => { clearInterval(summaryTimer); io.close(); db.close(); }, // io.close() also closes the HTTP server
+    close: () => { clearInterval(summaryTimer); clearInterval(backupTimer); apiLimit.stop(); loginLimit.stop(); io.close(); db.close(); }, // io.close() also closes the HTTP server
   };
 }
 

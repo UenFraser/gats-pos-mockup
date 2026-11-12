@@ -11,12 +11,14 @@ const BUSINESS = {
   pmStartHour: 17,   // AM shift 10:00-17:00, PM shift 17:00 until closing
 };
 
-function makeConfig({ dataDir, clientDir }) {
+function makeConfig({ dataDir, clientDir, appVersion = '' }) {
   return {
+    appVersion,
     dataDir,                                   // Electron userData (database, backups, logs)
     clientDir,                                 // built React app
     backupDir: path.join(dataDir, 'backups'),
-    keepBackups: Number(process.env.GATS_KEEP_BACKUPS) || 10,
+    keepBackups: Number(process.env.GATS_KEEP_BACKUPS) || 30, // newest 30 (startup + every few hours)
+    backupEveryHours: 6,
     host: '0.0.0.0',                           // phones must reach it
     port: Number(process.env.GATS_PORT) || 3000,
   };

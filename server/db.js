@@ -53,4 +53,4 @@ function openDb(dataDir) {
 
 const branchId = (db) => db.prepare("SELECT value FROM settings WHERE key = 'branch_id'").pluck().get();
 
-module.exports = { openDb, branchId, newId: randomUUID, nowIso: () => new Date().toISOString() };
+module.exports = { openDb, branchId, newId: randomUUID, nowIso: () => new Date().toISOString(), SCHEMA_VERSION: MIGRATIONS.length };

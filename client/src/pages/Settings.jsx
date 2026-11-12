@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Shell from '../components/Shell';
+import SystemPanel from '../components/SystemPanel';
 import { api } from '../lib/api';
 
 export default function Settings() {
@@ -168,6 +169,7 @@ export default function Settings() {
           )}
         </div>
       )}
+      <div className="max-w-xl mt-8"><SystemPanel /></div>
     </Shell>
   );
 }
