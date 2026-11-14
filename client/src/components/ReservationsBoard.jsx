@@ -3,12 +3,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
 import { timeLocal } from '../lib/format';
+import { useConfirm } from './ConfirmProvider';
 import ReservationDialog from './ReservationDialog';
 
 const LATE_MS = 15 * 60 * 1000;
 const LIVE = ['reservation:changed', 'token:changed', 'connect'];
 
 export default function ReservationsBoard() {
+  const confirm = useConfirm();
   const [list, setList] = useState([]);
   const [dialog, setDialog] = useState(null); // null | 'new' | a reservation being edited
   const [error, setError] = useState('');
@@ -28,7 +30,7 @@ export default function ReservationsBoard() {
     try { await api.post(`/api/reservations/${r.id}/seat`); load(); } catch (e) { setError(e.message); }
   }
   async function cancel(r) {
-    if (!window.confirm(`Cancel the reservation for ${r.name} (${r.tokenNumber})?`)) return;
+    if (!(await confirm({ title: 'Cancel the reservation?', message: `${r.name} at ${r.tokenNumber}. The table will be free again.`, confirmText: 'Cancel the reservation', cancelText: 'Keep it', danger: true }))) return;
     setError('');
     try { await api.del(`/api/reservations/${r.id}`); load(); } catch (e) { setError(e.message); }
   }

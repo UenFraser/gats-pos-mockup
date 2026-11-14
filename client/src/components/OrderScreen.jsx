@@ -12,6 +12,7 @@ import Changes from './Changes';
 import CustomerBanner from './CustomerBanner';
 import NotifDots from './NotifDots';
 import SessionTab from './SessionTab';
+import { useConfirm } from './ConfirmProvider';
 import SwapDialog from './SwapDialog';
 import VoidDialog from './VoidDialog';
 import { useAuth } from '../auth/AuthContext';
@@ -33,6 +34,7 @@ function pickupIso(hm) {
 }
 
 export default function OrderScreen() {
+  const confirm = useConfirm();
   const [tokens, setTokens] = useState([]);
   const [flags, setFlags] = useState({}); // sessionId -> { unread, billRequested }
   const [tokenId, setTokenId] = useState(null);
@@ -94,9 +96,9 @@ export default function OrderScreen() {
   const bump = (id, delta) => changeCart((c) =>
     c.map((l) => (l.menuItemId === id ? { ...l, quantity: Math.min(MAX_QTY, l.quantity + delta) } : l)).filter((l) => l.quantity > 0));
 
-  const pickToken = (t) => {
+  const pickToken = async (t) => {
     if (t.id === tokenId) return;
-    if (cart.length && !window.confirm('Discard the order you are building?')) return;
+    if (cart.length && !(await confirm({ title: 'Discard this order?', message: 'You have items in the cart that were not sent. Switching tables will throw them away.', confirmText: 'Discard', cancelText: 'Keep building', danger: true }))) return;
     changeCart(() => []); setNotice(''); setError(''); setCustomer({ name: '', phone: '', source: 'LOCAL', pickup: '' }); setTokenId(t.id);
   };
 
@@ -110,7 +112,7 @@ export default function OrderScreen() {
     // A blue (reserved) table: the first order seats the guests, so make sure it is the right table.
     if (token.status === 'RESERVED') {
       const who = tab && tab.customerName ? ` for ${tab.customerName}${tab.reservationTime ? ` at ${timeLocal(tab.reservationTime)}` : ''}` : '';
-      if (!window.confirm(`${token.number} is reserved${who}. Seat them and send this order?`)) return;
+      if (!(await confirm({ title: `${token.number} is reserved`, message: `Reserved${who}. Seat them and send this order?`, confirmText: 'Seat them and send', cancelText: 'Go back' }))) return;
     }
     setSending(true); setError(''); setNotice('');
     if (!requestIdRef.current) requestIdRef.current = newRequestId();

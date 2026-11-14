@@ -1,6 +1,7 @@
 // Add / edit staff and manage approval PINs. Rules are enforced by the server (for example, the last manager cannot be removed).
 import { useState } from 'react';
 import { api } from '../lib/api';
+import { useConfirm } from './ConfirmProvider';
 
 export const ROLE_LABEL = { WAITER: 'Waiter', CASHIER: 'Cashier', KDS: 'Kitchen', MANAGER: 'Manager' };
 const ROLES = ['WAITER', 'CASHIER', 'KDS', 'MANAGER'];
@@ -64,6 +65,7 @@ export function AddStaffDialog({ onClose, onDone }) {
 }
 
 export function EditStaffDialog({ user, isMe, onClose, onDone }) {
+  const confirm = useConfirm();
   const [displayName, setDisplayName] = useState(user.displayName);
   const [role, setRole] = useState(user.role);
   const [active, setActive] = useState(!!user.active);
@@ -76,7 +78,7 @@ export function EditStaffDialog({ user, isMe, onClose, onDone }) {
   const ready = displayName.trim() && (!kindChanged || secretGiven) && (!secretGiven || secretOk(role, secret, repeat)) && !busy;
 
   async function submit() {
-    if (isMe && (!active || role !== user.role) && !window.confirm('You are changing your own account. Continue?')) return;
+    if (isMe && (!active || role !== user.role) && !(await confirm({ title: 'Change your own account?', message: 'You are changing your own role or switching yourself off. Continue?', confirmText: 'Continue', danger: true }))) return;
     setBusy(true); setError('');
     try {
       await api.patch(`/api/users/${user.id}`, { displayName, role, active, ...(secretGiven ? { secret } : {}) });
@@ -113,6 +115,7 @@ export function EditStaffDialog({ user, isMe, onClose, onDone }) {
 // Approval PIN: lets a manager (and the designated Lead Cashier) approve voids, discounts and cancelled takeouts.
 // A manager's own approval PIN is also what unlocks exporting daily summaries.
 export function ApprovalPinDialog({ user, hasPin, onClose, onDone }) {
+  const confirm = useConfirm();
   const [pin, setPin] = useState('');
   const [repeat, setRepeat] = useState('');
   const [busy, setBusy] = useState(false);
@@ -126,7 +129,7 @@ export function ApprovalPinDialog({ user, hasPin, onClose, onDone }) {
     finally { setBusy(false); }
   }
   async function remove() {
-    if (!window.confirm(`${user.displayName} will no longer be able to approve anything. Remove the PIN?`)) return;
+    if (!(await confirm({ title: 'Remove the approval PIN?', message: `${user.displayName} will no longer be able to approve anything.`, confirmText: 'Remove PIN', danger: true }))) return;
     setBusy(true); setError('');
     try { await api.del(`/api/users/${user.id}/approval-pin`); onDone(); }
     catch (e) { setError(e.message); }

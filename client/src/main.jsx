@@ -5,6 +5,7 @@ import './index.css';
 import { AuthProvider } from './auth/AuthContext';
 import RequireRole from './auth/RequireRole';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ConfirmProvider } from './components/ConfirmProvider';
 import Login from './pages/Login';
 import Waiter from './pages/Waiter';
 import DesktopOrder from './pages/DesktopOrder';
@@ -19,6 +20,7 @@ createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
+        <ConfirmProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/desktop/order" element={<RequireRole roles={['CASHIER', 'MANAGER']}><DesktopOrder /></RequireRole>} />
@@ -31,6 +33,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/kitchen/*" element={<RequireRole roles={['KDS', 'MANAGER']}><Kitchen /></RequireRole>} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        </ConfirmProvider>
       </AuthProvider>
     </BrowserRouter>
   </ErrorBoundary>

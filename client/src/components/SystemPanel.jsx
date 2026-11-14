@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { dateTimeLocal } from '../lib/format';
 import RestoreDialog from './RestoreDialog';
+import { SCREENS_BUILD } from '../lib/build';
 
 const KIND = { backup: 'Backup', 'before-update': 'Before an update', 'before-restore': 'Before a restore', damaged: 'Damaged file' };
 const size = (b) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
@@ -36,9 +37,38 @@ export default function SystemPanel() {
 
       <div className="card bg-base-200 p-3 text-xs space-y-1 break-all">
         <p>Version {info.appVersion || '-'} · database v{info.schemaVersion} · {size(info.dbSizeBytes)} · running {Math.round(info.uptimeSeconds / 3600)} h</p>
+        <p>Build: program {info.builds.main} · server {info.builds.server} · screens {SCREENS_BUILD}</p>
         <p>Data folder: {info.dataDir}</p>
         <p>Phones open: {info.addresses.length ? info.addresses.map((a) => `http://${a.split(' ')[0]}:${info.port}/`).join('  or  ') : 'no network found'}</p>
       </div>
+
+      {(info.builds.main !== info.builds.server || info.builds.server !== SCREENS_BUILD) && (
+        <div className="alert alert-error text-xs">
+          Some update files were not copied: program {info.builds.main}, server {info.builds.server}, screens {SCREENS_BUILD}. Copy the newest update files again (all three must show the same build), then run npm run dist.
+        </div>
+      )}
+
+      {info.firewall && (
+        <div className="card bg-base-200 p-3 space-y-2">
+          <p className="text-sm font-semibold">Phones and the Windows Firewall</p>
+          {info.firewall.rule === true
+            ? <p className="text-xs text-success">Phones on your private network are allowed through the firewall.</p>
+            : (
+              <>
+                <div className="alert alert-warning text-xs">{info.firewall.rule === null ? 'The firewall could not be checked.' : 'The firewall rule for phones is missing.'} Tap the button, then click <b>Yes</b> when Windows asks for permission on this computer.</div>
+                <button className="btn btn-sm btn-primary w-fit" disabled={busy}
+                  onClick={() => run(() => api.post('/api/system/firewall'), 'Windows is asking for permission on the POS computer. Click Yes there.').then(() => setTimeout(load, 8000))}>
+                  Allow phones through the firewall
+                </button>
+              </>
+            )}
+          {info.firewall.publicNetworks.length > 0 && (
+            <div className="alert alert-warning text-xs">
+              This computer is on a network Windows calls Public ({info.firewall.publicNetworks.join(', ')}). Public networks block phones. In Windows: Settings, Network and internet, Wi-Fi (or Ethernet), your network, then choose Private.
+            </div>
+          )}
+        </div>
+      )}
 
       {info.autoStartAvailable && (
         <label className="label cursor-pointer justify-start gap-3">

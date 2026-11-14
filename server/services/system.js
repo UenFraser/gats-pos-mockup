@@ -7,6 +7,7 @@ const { backupDb, listBackups } = require('./backup');
 const { scheduleRestore } = require('./restore');
 const { lanAddresses } = require('./network');
 const { SCHEMA_VERSION } = require('../db');
+const { BUILD } = require('../build');
 
 const getSetting = (db, key) => db.prepare('SELECT value FROM settings WHERE key = ?').pluck().get(`system.${key}`);
 const setSetting = (db, key, value) => db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(`system.${key}`, value);
@@ -27,7 +28,7 @@ function getSystemInfo(db, config, hooks = {}) {
   const backups = listBackups(config.backupDir);
   const extra = extraBackupDir(db);
   return {
-    appVersion: config.appVersion || '', schemaVersion: db.pragma('user_version', { simple: true }), uptimeSeconds: Math.round(process.uptime()),
+    appVersion: config.appVersion || '', builds: { server: BUILD, main: hooks.mainBuild || 'unknown' }, schemaVersion: db.pragma('user_version', { simple: true }), uptimeSeconds: Math.round(process.uptime()),
     dataDir: config.dataDir, dbSizeBytes: fs.existsSync(dbFile) ? fs.statSync(dbFile).size : 0,
     port: config.port, addresses: lanAddresses().map((a) => `${a.address} (${a.name})`),
     backups: backups.slice(0, 20), lastBackupAt: (backups.find((b) => b.kind === 'backup') || {}).at || null,
@@ -68,4 +69,14 @@ function requestRestore(db, config, hooks = {}, user, body) {
   return { success: true, willRestart: !!hooks.restart, name: b.name };
 }
 
-module.exports = { getSystemInfo, updateSystemSettings, backupNow, requestRestore, extraBackupDir };
+// Phones cannot reach the POS until Windows Firewall allows it. The desktop program can ask Windows (it shows a permission
+// prompt on the POS computer). Only the POS computer itself may start this.
+function requestFirewallOpen(hooks = {}, ip) {
+  const local = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+  if (!local) throw new HttpError(403, 'Do this on the POS computer itself (Windows asks for permission on its screen)');
+  if (!hooks.allowFirewall) throw new HttpError(422, 'This only works in the installed program on Windows');
+  hooks.allowFirewall();
+  return { success: true };
+}
+
+module.exports = { getSystemInfo, updateSystemSettings, backupNow, requestRestore, requestFirewallOpen, extraBackupDir };

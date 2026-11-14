@@ -21,7 +21,9 @@ function validateBackup(file, maxVersion) {
     const version = db.pragma('user_version', { simple: true });
     if (version > maxVersion) return { ok: false, error: 'This backup was made by a newer version of the POS' };
     if (!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sessions'").get()) return { ok: false, error: 'This is not a POS backup' };
-    return { ok: true, version };
+    // hasSales lets recovery prefer a backup with real data over a newer backup of an empty database.
+    const hasSales = db.prepare('SELECT 1 FROM sessions LIMIT 1').get() !== undefined;
+    return { ok: true, version, hasSales };
   } catch (e) {
     return { ok: false, error: 'This file cannot be read as a POS backup' };
   } finally {
@@ -80,14 +82,22 @@ function applyPendingRestore(dataDir, maxVersion) {
 }
 
 // A quick health check of the live database file. ok:true also when there is no database yet (first run).
-function checkIntegrity(dataDir) {
+// SQLite treats an EMPTY file as a valid empty database, so an empty file is reported separately: it means the data
+// was lost or replaced. That is only a problem when backups exist (otherwise this is simply a brand-new install).
+function checkIntegrity(dataDir, maxVersion = Infinity) {
   const live = path.join(dataDir, DB_FILE);
   if (!fs.existsSync(live)) return { ok: true, fresh: true };
   let db;
   try {
     db = new Database(live);
     const r = db.pragma('quick_check', { simple: true });
-    return r === 'ok' ? { ok: true } : { ok: false, error: String(r) };
+    if (r !== 'ok') return { ok: false, error: String(r) };
+    const tables = db.prepare("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table'").pluck().get();
+    if (tables === 0) {
+      if (newestValidBackup(dataDir, maxVersion)) return { ok: false, empty: true, error: 'The database file is empty but backups exist' };
+      return { ok: true, empty: true };
+    }
+    return { ok: true };
   } catch (e) {
     return { ok: false, error: e.message };
   } finally {
@@ -99,7 +109,14 @@ function newestValidBackup(dataDir, maxVersion) {
   const dir = path.join(dataDir, 'backups');
   if (!fs.existsSync(dir)) return null;
   const names = fs.readdirSync(dir).filter((f) => NAME.test(f)).sort().reverse();
-  return names.find((n) => validateBackup(path.join(dir, n), maxVersion).ok) || null;
+  let newestOk = null;
+  for (const n of names) {
+    const v = validateBackup(path.join(dir, n), maxVersion);
+    if (!v.ok) continue;
+    if (v.hasSales) return n;        // the newest backup that contains real sales
+    if (!newestOk) newestOk = n;     // remember the newest healthy one in case none has sales yet
+  }
+  return newestOk;
 }
 
 // The database is damaged: keep the broken file (as damaged-...), install the newest healthy backup.
