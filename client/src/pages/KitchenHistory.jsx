@@ -1,5 +1,6 @@
 // Finished orders for tables that are still open. Recall puts one back on the active screen.
 import { useCallback, useEffect, useState } from 'react';
+import Notice from '../components/Notice';
 import Shell from '../components/Shell';
 import KitchenNav from '../components/KitchenNav';
 import { api } from '../lib/api';
@@ -30,7 +31,7 @@ export default function KitchenHistory() {
   return (
     <Shell title="Kitchen history" wide>
       <KitchenNav />
-      {error && <div className="alert alert-error mb-4 text-sm">{error}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')} className="mb-4">{error}</Notice>}
       {orders && orders.length === 0 && <p className="text-center text-xl font-bold opacity-50 py-24">Nothing finished yet</p>}
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 items-start">
         {(orders || []).map((o) => (

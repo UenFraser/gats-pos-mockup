@@ -1,6 +1,7 @@
 // Take payment and close the tab. Split payments are several lines (for example GCash + cash).
 // The server re-checks everything: it decides the amount due, the change, and what each line pays.
 import { useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { php } from '../lib/format';
 import BillLines from './BillLines';
@@ -78,7 +79,7 @@ export default function CheckoutDialog({ session, onDone, onCancel }) {
           {!result.skipped && (result.printed
             ? <p className="text-sm text-success break-all">{result.savedTo ? `Receipt saved: ${result.savedTo}` : 'Receipt printed'}</p>
             : <div className="alert alert-warning text-sm text-left">Receipt not printed: {result.error || 'unknown problem'}</div>)}
-          {error && <div className="alert alert-error text-sm">{error}</div>}
+          {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
           <div className="modal-action justify-center">
             {!result.skipped && <button className="btn btn-outline" onClick={printAgain}>Print receipt again</button>}
             <button className="btn btn-primary" onClick={onDone}>Done</button>
@@ -97,7 +98,7 @@ export default function CheckoutDialog({ session, onDone, onCancel }) {
           <p className="text-4xl font-black">{php(due)}</p>
           <BillLines bill={bill} />
         </div>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
         {due === 0 && <p className="text-sm">Nothing is due on this tab. Close it to free the table.</p>}
 
         {parsed.map((l) => (

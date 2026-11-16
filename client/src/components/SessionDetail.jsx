@@ -2,6 +2,7 @@
 // Look, read what changed, add items, void with approval, clear the bill request, follow up with the kitchen.
 // Swap moves an item to another table (not a void). Print bill and Checkout close the tab.
 import { useEffect, useState } from 'react';
+import Notice from './Notice';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useSessionView } from '../lib/useSessionView';
@@ -55,8 +56,8 @@ export default function SessionDetail({ sessionId, onClose }) {
           <h2 className="text-xl font-bold">{session ? `${session.tokenNumber} · ${session.zone}` : 'Loading...'}</h2>
           <button className="btn btn-sm btn-circle" onClick={onClose}>x</button>
         </div>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
-        {notice && <div className="alert alert-success text-sm">{notice}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
+        {notice && <Notice kind="success" onDismiss={() => setNotice('')}>{notice}</Notice>}
         {!session && <p className="opacity-60">Loading...</p>}
         {session && (
           <>

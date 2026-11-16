@@ -1,5 +1,6 @@
 // Restore a backup. Manager approval PIN required. The program restarts to apply it; the current data is kept as a safety copy.
 import { useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { dateTimeLocal } from '../lib/format';
 
@@ -27,7 +28,7 @@ export default function RestoreDialog({ backup, onClose }) {
             <div className="alert alert-warning text-sm">
               The POS will restart. Everything entered AFTER this backup was made will be missing. The current data is kept as a safety copy, so nothing is lost for good.
             </div>
-            {error && <div className="alert alert-error text-sm">{error}</div>}
+            {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
             <p className="text-xs opacity-70">A manager types their approval PIN:</p>
             <input className="input input-bordered w-full text-center tracking-widest text-xl" type="password" inputMode="numeric" autoComplete="off" maxLength={6}
               placeholder="------" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}

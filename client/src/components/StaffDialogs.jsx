@@ -1,5 +1,6 @@
 // Add / edit staff and manage approval PINs. Rules are enforced by the server (for example, the last manager cannot be removed).
 import { useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { useConfirm } from './ConfirmProvider';
 
@@ -45,7 +46,7 @@ export function AddStaffDialog({ onClose, onDone }) {
     <div className="modal modal-open">
       <div className="modal-box max-w-sm space-y-3">
         <h3 className="font-bold text-lg">Add staff</h3>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
         <input className="input input-bordered input-sm w-full" placeholder="Name shown on the screen" maxLength={40} value={displayName}
           onChange={(e) => { setDisplayName(e.target.value); if (!touched) setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')); }} />
         <input className="input input-bordered input-sm w-full" placeholder="Username (unique)" maxLength={30} value={username}
@@ -91,7 +92,7 @@ export function EditStaffDialog({ user, isMe, onClose, onDone }) {
       <div className="modal-box max-w-sm space-y-3">
         <h3 className="font-bold text-lg">Edit {user.displayName}</h3>
         <p className="text-xs opacity-60">Username: {user.username}</p>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
         <input className="input input-bordered input-sm w-full" maxLength={40} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
         <select className="select select-bordered select-sm w-full" value={role} onChange={(e) => { setRole(e.target.value); setSecret(''); setRepeat(''); }}>
           {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
@@ -142,7 +143,7 @@ export function ApprovalPinDialog({ user, hasPin, onClose, onDone }) {
         <p className="text-xs opacity-70">{user.role === 'CASHIER'
           ? 'Only the designated Lead Cashier should have one. It is separate from their login PIN.'
           : 'Managers use it to approve voids and discounts, and to export daily summaries. It is separate from the login password.'}</p>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
         <input className="input input-bordered input-sm w-full text-center tracking-widest" type="password" inputMode="numeric" autoComplete="new-password" maxLength={6}
           placeholder="New 6-digit approval PIN" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
         <input className="input input-bordered input-sm w-full text-center tracking-widest" type="password" inputMode="numeric" autoComplete="new-password" maxLength={6}

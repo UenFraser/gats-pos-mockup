@@ -1,5 +1,6 @@
 // Ask the kitchen for ice for a table. Ice is free, so there is no bill and no approval.
 import { useEffect, useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 
 const ZONES = ['RESTAURANT', 'BAR', 'TAKEOUT'];
@@ -27,7 +28,7 @@ export default function IceRequestDialog({ onClose, onDone }) {
     <div className="modal modal-open">
       <div className="modal-box max-w-md space-y-3">
         <h3 className="font-bold text-lg">Request ice</h3>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
         <div>
           <p className="text-sm mb-1">Which table?</p>
           {ZONES.map((z) => (

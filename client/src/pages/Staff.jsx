@@ -1,8 +1,8 @@
 // Manager only: add staff, change names/roles, reset PINs and passwords, switch people off, and manage approval PINs.
 // (This replaces tools/add-staff.ps1 and tools/set-approval-pin.ps1.)
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Shell from '../components/Shell';
+import Notice from '../components/Notice';
+import DesktopShell from '../components/DesktopShell';
 import { AddStaffDialog, ApprovalPinDialog, EditStaffDialog, ROLE_LABEL } from '../components/StaffDialogs';
 import { api } from '../lib/api';
 import { useAuth } from '../auth/AuthContext';
@@ -25,12 +25,11 @@ export default function Staff() {
   const rows = users ? [...users].sort((a, b) => b.active - a.active || a.displayName.localeCompare(b.displayName)) : [];
 
   return (
-    <Shell title="Staff">
+    <DesktopShell title="Staff" wide={false}>
       <div className="flex gap-2 mb-3">
-        <Link to="/desktop" className="btn btn-ghost btn-sm">&larr; Desktop</Link>
         <button className="btn btn-primary btn-sm ml-auto" onClick={() => setDialog({ type: 'add' })}>Add staff</button>
       </div>
-      {error && <div className="alert alert-error mb-3 text-sm">{error}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')} className="mb-3">{error}</Notice>}
       <p className="text-xs opacity-60 mb-3">
         Waiters, cashiers and kitchen staff log in by tapping their name and typing a 6-digit PIN. Managers log in with a password.
         Approval PINs are separate: give one to each manager and to the designated Lead Cashier only.
@@ -58,6 +57,6 @@ export default function Staff() {
       {dialog && dialog.type === 'add' && <AddStaffDialog onClose={() => setDialog(null)} onDone={done} />}
       {dialog && dialog.type === 'edit' && <EditStaffDialog user={dialog.user} isMe={dialog.user.id === me.id} onClose={() => setDialog(null)} onDone={done} />}
       {dialog && dialog.type === 'pin' && <ApprovalPinDialog user={dialog.user} hasPin={approvers.includes(dialog.user.id)} onClose={() => setDialog(null)} onDone={done} />}
-    </Shell>
+    </DesktopShell>
   );
 }

@@ -1,6 +1,7 @@
 // The kitchen's ice strip: new requests (with the ice sound), follow-ups, and a Ready button.
 // Once the kitchen taps Ready the request leaves this strip and waits at the counter for front of house.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
 import { play } from '../lib/sounds';
@@ -44,7 +45,7 @@ export default function KitchenIce() {
   if (!waiting.length && !error) return null;
   return (
     <div className="mb-4 space-y-2">
-      {error && <div className="alert alert-error text-sm">{error}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
       <div className="flex flex-wrap gap-3">
         {waiting.map((r) => {
           const slow = Date.now() - new Date(r.createdAt).getTime() > SLOW_MS;

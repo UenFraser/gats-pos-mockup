@@ -2,6 +2,7 @@
 // Used by the waiter phone (/waiter) and the cashier counter (/desktop/order).
 // The client sends ONLY token id, item ids and quantities. Prices and staff come from the server.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Notice from './Notice';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { php, timeLocal } from '../lib/format';
@@ -148,8 +149,8 @@ export default function OrderScreen() {
 
   return (
     <div className={`space-y-4 ${cart.length ? 'pb-24' : ''}`}>
-      {error && <div className="alert alert-error text-sm">{error}</div>}
-      {notice && <div className="alert alert-success text-sm">{notice}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
+      {notice && <Notice kind="success" onDismiss={() => setNotice('')}>{notice}</Notice>}
 
       <section>
         <div className="flex items-center justify-between mb-2">

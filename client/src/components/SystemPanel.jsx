@@ -1,5 +1,6 @@
 // Settings > System (managers): where the data lives, backups (and a second location), start with Windows, restore.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { dateTimeLocal } from '../lib/format';
 import RestoreDialog from './RestoreDialog';
@@ -20,6 +21,28 @@ export default function SystemPanel() {
     api.get('/api/system').then((d) => { setInfo(d.system); setExtraDir(d.system.extraBackupDir); }).catch((e) => setError(e.message));
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { // coming back from the Windows permission window: look again
+    window.addEventListener('focus', load);
+    return () => window.removeEventListener('focus', load);
+  }, [load]);
+
+  // After tapping "Allow phones through the firewall", look every 3 seconds (up to 90 s) until the rule is there.
+  const poll = useRef(null);
+  const stopPolling = () => { if (poll.current) { clearInterval(poll.current); poll.current = null; } };
+  useEffect(() => stopPolling, []);
+  function waitForFirewall() {
+    stopPolling();
+    let tries = 0;
+    poll.current = setInterval(async () => {
+      tries += 1;
+      try {
+        const d = await api.get('/api/system');
+        setInfo(d.system);
+        if (d.system.firewall && d.system.firewall.rule === true) { stopPolling(); setMsg('Phones are now allowed through the firewall.'); }
+      } catch { /* keep trying */ }
+      if (tries >= 30) stopPolling();
+    }, 3000);
+  }
 
   async function run(fn, okText) {
     setBusy(true); setError(''); setMsg('');
@@ -28,12 +51,12 @@ export default function SystemPanel() {
     finally { setBusy(false); }
   }
 
-  if (!info) return error ? <div className="alert alert-error text-sm">{error}</div> : null;
+  if (!info) return error ? <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice> : null;
   return (
     <section className="space-y-3">
       <h2 className="font-semibold">System and backups</h2>
-      {error && <div className="alert alert-error text-sm">{error}</div>}
-      {msg && <div className="alert alert-success text-sm break-all">{msg}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
+      {msg && <Notice kind="success" onDismiss={() => setMsg('')} className="break-all">{msg}</Notice>}
 
       <div className="card bg-base-200 p-3 text-xs space-y-1 break-all">
         <p>Version {info.appVersion || '-'} · database v{info.schemaVersion} · {size(info.dbSizeBytes)} · running {Math.round(info.uptimeSeconds / 3600)} h</p>
@@ -44,7 +67,7 @@ export default function SystemPanel() {
 
       {(info.builds.main !== info.builds.server || info.builds.server !== SCREENS_BUILD) && (
         <div className="alert alert-error text-xs">
-          Some update files were not copied: program {info.builds.main}, server {info.builds.server}, screens {SCREENS_BUILD}. Copy the newest update files again (all three must show the same build), then run npm run dist.
+          <span>Some update files were not copied: program {info.builds.main}, server {info.builds.server}, screens {SCREENS_BUILD}. Copy the newest update files again (all three must show the same build), then run npm run dist.</span>
         </div>
       )}
 
@@ -55,16 +78,18 @@ export default function SystemPanel() {
             ? <p className="text-xs text-success">Phones on your private network are allowed through the firewall.</p>
             : (
               <>
-                <div className="alert alert-warning text-xs">{info.firewall.rule === null ? 'The firewall could not be checked.' : 'The firewall rule for phones is missing.'} Tap the button, then click <b>Yes</b> when Windows asks for permission on this computer.</div>
+                <div className="alert alert-warning text-xs">
+                  <span>{info.firewall.rule === null ? 'The firewall could not be checked.' : 'The firewall rule for phones is missing.'} Tap the button, then click <b>Yes</b> when Windows asks for permission on this computer.</span>
+                </div>
                 <button className="btn btn-sm btn-primary w-fit" disabled={busy}
-                  onClick={() => run(() => api.post('/api/system/firewall'), 'Windows is asking for permission on the POS computer. Click Yes there.').then(() => setTimeout(load, 8000))}>
+                  onClick={() => run(() => api.post('/api/system/firewall'), 'Windows is asking for permission on the POS computer. Click Yes there.').then(waitForFirewall)}>
                   Allow phones through the firewall
                 </button>
               </>
             )}
           {info.firewall.publicNetworks.length > 0 && (
             <div className="alert alert-warning text-xs">
-              This computer is on a network Windows calls Public ({info.firewall.publicNetworks.join(', ')}). Public networks block phones. In Windows: Settings, Network and internet, Wi-Fi (or Ethernet), your network, then choose Private.
+              <span>This computer is on a network Windows calls Public ({info.firewall.publicNetworks.join(', ')}). Public networks block phones. In Windows: Settings, Network and internet, Wi-Fi (or Ethernet), your network, then choose Private.</span>
             </div>
           )}
         </div>

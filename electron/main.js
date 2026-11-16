@@ -9,7 +9,7 @@ const { SCHEMA_VERSION } = require('../server/db');
 const { startServer } = require('../server');
 const { applyPendingRestore, checkIntegrity, recoverFromDamage } = require('../server/services/restore');
 
-const MAIN_BUILD = '8d'; // shown in Settings > System (must match server/build.js and the screens)
+const MAIN_BUILD = '9a'; // shown in Settings > System (must match server/build.js and the screens)
 const startedAt = Date.now(); // for the startup timing lines in the log
 let shuttingDown = false;
 

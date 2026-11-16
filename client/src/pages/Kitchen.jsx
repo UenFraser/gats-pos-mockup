@@ -1,6 +1,7 @@
 // Kitchen display: live food orders for open tables. Done button, follow-up highlights, sounds.
 // The kitchen only reads (REST) and listens (events); it never sends business events.
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Notice from '../components/Notice';
 import Shell from '../components/Shell';
 import KitchenIce from '../components/KitchenIce';
 import KitchenNav from '../components/KitchenNav';
@@ -75,7 +76,7 @@ export default function Kitchen() {
       <KitchenNav />
       <KitchenIce />
       {needTap && <div className="alert alert-warning mb-4 font-semibold">Tap anywhere on this screen to turn the sound on.</div>}
-      {error && <div className="alert alert-error mb-4 text-sm">{error}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')} className="mb-4">{error}</Notice>}
 
       {orders && orders.length === 0 && <p className="text-center text-xl font-bold opacity-50 py-24">No active orders</p>}
 

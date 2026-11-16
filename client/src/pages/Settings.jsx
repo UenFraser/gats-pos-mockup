@@ -1,7 +1,7 @@
 // Manager only: receipt text and the receipt printer.
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Shell from '../components/Shell';
+import Notice from '../components/Notice';
+import DesktopShell from '../components/DesktopShell';
 import SystemPanel from '../components/SystemPanel';
 import { api } from '../lib/api';
 
@@ -51,12 +51,11 @@ export default function Settings() {
   }
 
   return (
-    <Shell title="Settings">
-      <Link to="/desktop" className="btn btn-ghost btn-sm mb-2">&larr; Desktop</Link>
+    <DesktopShell title="Settings" wide={false}>
       {!s ? <p>Loading...</p> : (
         <div className="space-y-4 max-w-xl">
-          {error && <div className="alert alert-error text-sm">{error}</div>}
-          {msg && <div className="alert alert-success text-sm">{msg}</div>}
+          {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
+          {msg && <Notice kind="success" onDismiss={() => setMsg('')}>{msg}</Notice>}
 
           <h2 className="font-semibold">Receipt</h2>
           <label className="form-control">
@@ -170,6 +169,6 @@ export default function Settings() {
         </div>
       )}
       <div className="max-w-xl mt-8"><SystemPanel /></div>
-    </Shell>
+    </DesktopShell>
   );
 }

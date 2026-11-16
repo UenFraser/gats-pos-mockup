@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Notice from '../components/Notice';
 import { Navigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth, homeFor } from '../auth/AuthContext';
@@ -66,7 +67,7 @@ export default function Login() {
       <div className="card bg-base-200 w-full max-w-sm shadow">
         <div className="card-body gap-3">
           <h1 className="card-title justify-center text-2xl">Gats Bar and Restaurant</h1>
-          {error && <div className="alert alert-error text-sm">{error}</div>}
+          {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
           {mode === 'loading' && <div className="text-center"><span className="loading loading-spinner" /></div>}
 
           {mode === 'setup' && (

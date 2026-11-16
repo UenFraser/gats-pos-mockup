@@ -15,6 +15,7 @@ import Desktop from './pages/Desktop';
 import Settings from './pages/Settings';
 import Staff from './pages/Staff';
 import Summary from './pages/Summary';
+import Reservations from './pages/Reservations';
 
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')).render(
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/desktop/order" element={<RequireRole roles={['CASHIER', 'MANAGER']}><DesktopOrder /></RequireRole>} />
+          <Route path="/desktop/reservations" element={<RequireRole roles={['CASHIER', 'MANAGER']}><Reservations /></RequireRole>} />
           <Route path="/desktop/summary" element={<RequireRole roles={['CASHIER', 'MANAGER']}><Summary /></RequireRole>} />
           <Route path="/desktop/staff" element={<RequireRole roles={['MANAGER']}><Staff /></RequireRole>} />
           <Route path="/desktop/settings" element={<RequireRole roles={['MANAGER']}><Settings /></RequireRole>} />

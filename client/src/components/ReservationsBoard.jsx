@@ -1,5 +1,6 @@
 // Today's reservations on the cashier desktop: seat, edit, cancel, or take a new one.
 import { useCallback, useEffect, useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
 import { timeLocal } from '../lib/format';
@@ -41,7 +42,7 @@ export default function ReservationsBoard() {
         <h2 className="font-semibold text-sm">Reservations today</h2>
         <button className="btn btn-xs btn-primary" onClick={() => setDialog('new')}>New reservation</button>
       </div>
-      {error && <div className="alert alert-error text-sm">{error}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
       {list.length === 0 && <p className="text-xs opacity-60">No reservations waiting.</p>}
       {list.map((r) => {
         const late = Date.now() - new Date(r.time).getTime() > LATE_MS;

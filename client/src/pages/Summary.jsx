@@ -1,8 +1,8 @@
 // Daily summary: what to count and check when closing a business day. The system keeps the last 10 business days;
 // older ones are kept at HQ. Managers can export a file (manager PIN required).
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Shell from '../components/Shell';
+import Notice from '../components/Notice';
+import DesktopShell from '../components/DesktopShell';
 import ExportSummaryDialog from '../components/ExportSummaryDialog';
 import { api } from '../lib/api';
 import { php } from '../lib/format';
@@ -49,9 +49,8 @@ export default function Summary() {
   const listWithToday = dates.map((d) => list.find((x) => x.date === d) || { date: d, isToday: d === today, totalCents: 0 });
 
   return (
-    <Shell title="Daily summary" wide>
+    <DesktopShell title="Daily summary">
       <div className="flex gap-2 items-center flex-wrap mb-4">
-        <Link to="/desktop" className="btn btn-ghost btn-sm">&larr; Desktop</Link>
         <select className="select select-bordered select-sm" value={date} onChange={(e) => setDate(e.target.value)}>
           {dates.map((d) => <option key={d} value={d}>{d}{d === today ? ' (today)' : ''}</option>)}
         </select>
@@ -60,8 +59,8 @@ export default function Summary() {
         {user.role === 'MANAGER' && <button className="btn btn-sm btn-primary" onClick={() => setExporting(true)}>Export</button>}
       </div>
       <p className="text-xs opacity-60 mb-3">This system keeps the last 10 business days. Older summaries are kept at HQ.</p>
-      {error && <div className="alert alert-error mb-3 text-sm">{error}</div>}
-      {msg && <div className="alert alert-success mb-3 text-sm break-all">{msg}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')} className="mb-3">{error}</Notice>}
+      {msg && <Notice kind="success" onDismiss={() => setMsg('')} className="mb-3 break-all">{msg}</Notice>}
 
       {s && (
         <div className="space-y-3 max-w-5xl">
@@ -117,6 +116,6 @@ export default function Summary() {
         </div>
       )}
       {exporting && <ExportSummaryDialog summaries={listWithToday} initialDate={date} onClose={() => setExporting(false)} />}
-    </Shell>
+    </DesktopShell>
   );
 }

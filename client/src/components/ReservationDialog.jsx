@@ -1,6 +1,7 @@
 // Take or edit a reservation. Reservations are for today; the table is held until the guests are seated or it is cancelled.
 // The 50-peso fee is added to the final bill (or deducted, depending on Billing settings).
 import { useEffect, useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -36,7 +37,7 @@ export default function ReservationDialog({ existing, onClose, onDone }) {
     <div className="modal modal-open">
       <div className="modal-box max-w-md space-y-3">
         <h3 className="font-bold text-lg">{existing ? `Edit reservation for ${existing.tokenNumber}` : 'New reservation'}</h3>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
         {!existing && (
           <div>
             <p className="text-sm mb-1">Table (free ones only)</p>

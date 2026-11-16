@@ -1,6 +1,7 @@
 // Apply or remove a discount. Like a void, a manager or the Lead Cashier must type their approval PIN.
 // The server calculates the discount (and the VAT effect for Senior/PWD); this screen only sends the choice.
 import { useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 
 const KINDS = [
@@ -45,7 +46,7 @@ export default function DiscountDialog({ session, mode, onClose, onDone }) {
     <div className="modal modal-open">
       <div className="modal-box max-w-sm space-y-3">
         <h3 className="font-bold text-lg">{mode === 'remove' ? `Remove the discount on ${session.tokenNumber}` : `Discount for ${session.tokenNumber}`}</h3>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
 
         {mode === 'apply' && (
           <>

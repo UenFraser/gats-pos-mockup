@@ -1,5 +1,6 @@
 // Nobody collected the takeout. A manager or the Lead Cashier approves with their PIN; the food is recorded as voided.
 import { useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 
 export default function CancelTakeoutDialog({ session, onClose, onDone }) {
@@ -21,7 +22,7 @@ export default function CancelTakeoutDialog({ session, onClose, onDone }) {
       <div className="modal-box max-w-sm space-y-3">
         <h3 className="font-bold text-lg">Cancel the takeout for {session.customerName}</h3>
         <p className="text-xs opacity-70">Everything still on the order is recorded as voided (waste) and the table is freed.</p>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
         <input className="input input-bordered input-sm w-full" maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason" />
         <div>
           <p className="text-xs opacity-70 mb-1">A manager or the Lead Cashier types their approval PIN:</p>

@@ -2,6 +2,7 @@
 //   Kitchen preparing -> READY at the counter -> delivered to the table.
 // sound = play the ice sound when something becomes ready (the cashier desktop uses this).
 import { useCallback, useEffect, useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { connectSocket } from '../lib/socket';
 import { play } from '../lib/sounds';
@@ -42,7 +43,7 @@ export default function IceBoard({ sound = false }) {
         <h2 className="font-semibold text-sm">Ice</h2>
         <button className="btn btn-xs btn-info" onClick={() => setDialog(true)}>Request ice</button>
       </div>
-      {error && <div className="alert alert-error text-sm">{error}</div>}
+      {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
       {requests.map((r) => (
         <div key={r.id} className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-sm ${r.state === 'READY' ? 'border-success bg-success/10 animate-pulse' : 'border-base-300 bg-base-200'}`}>
           <div className="flex-1">

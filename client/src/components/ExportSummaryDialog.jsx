@@ -1,5 +1,6 @@
 // Export daily summaries to a file. A manager's approval PIN is required (a Lead Cashier's PIN is not enough).
 import { useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { downloadText } from '../lib/download';
 import { php } from '../lib/format';
@@ -29,8 +30,8 @@ export default function ExportSummaryDialog({ summaries, initialDate, onClose })
     <div className="modal modal-open">
       <div className="modal-box max-w-md space-y-3">
         <h3 className="font-bold text-lg">Export daily summaries</h3>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
-        {done && <div className="alert alert-success text-sm break-all">{done}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
+        {done && <Notice kind="success" onDismiss={() => setDone('')} className="break-all">{done}</Notice>}
         <div className="space-y-1">
           {summaries.map((s) => (
             <label key={s.date} className="flex items-center gap-2 text-sm cursor-pointer">

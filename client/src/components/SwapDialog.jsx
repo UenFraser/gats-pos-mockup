@@ -1,6 +1,7 @@
 // Move an item to another table: the waiter picked the wrong table. This is NOT a void (nothing is wasted).
 // The server keeps the quoted price, tells the kitchen if the food is still being made, and notifies both tabs.
 import { useEffect, useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 
 const ZONES = ['RESTAURANT', 'BAR', 'TAKEOUT'];
@@ -38,7 +39,7 @@ export default function SwapDialog({ session, item, onClose, onDone }) {
       <div className="modal-box max-w-md space-y-3">
         <h3 className="font-bold text-lg">Swap {item.name}</h3>
         <p className="text-xs opacity-70">Moves it from {session.tokenNumber} to another table. Nothing is voided or wasted.</p>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
 
         <div className="flex items-center gap-3">
           <span className="text-sm">How many?</span>

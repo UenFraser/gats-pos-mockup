@@ -1,6 +1,7 @@
 // Void part of an item. A manager or the Lead Cashier must type their approval PIN. The price and the
 // approver are decided by the server; this screen only sends what to void, why, and the PIN typed.
 import { useState } from 'react';
+import Notice from './Notice';
 import { api } from '../lib/api';
 import { php } from '../lib/format';
 
@@ -35,7 +36,7 @@ export default function VoidDialog({ sessionId, item, onClose, onDone }) {
     <div className="modal modal-open">
       <div className="modal-box max-w-sm space-y-3">
         <h3 className="font-bold text-lg">Void {item.name}</h3>
-        {error && <div className="alert alert-error text-sm">{error}</div>}
+        {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
 
         <div className="flex items-center gap-3">
           <span className="text-sm">How many?</span>
