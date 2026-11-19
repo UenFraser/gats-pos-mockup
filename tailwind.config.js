@@ -1,4 +1,37 @@
 module.exports = {
   content: ['./client/index.html', './client/src/**/*.{js,jsx}'],
+  theme: {
+    extend: {},
+  },
   plugins: [require('daisyui')],
+  daisyui: {
+    themes: [{
+      gats: {
+        primary: '#00000f',
+        'primary-content': '#ffffff',
+        secondary: '#370a00',
+        'secondary-content': '#ffd6a7',
+        accent: '#8c3f27',
+        'accent-content': '#ffd6a7',
+        neutral: '#c93400',
+        'neutral-content': '#fff7ed',
+        'base-100': '#fff7ed',
+        'base-200': '#feecd3',
+        'base-300': '#ffd6a7',
+        'base-content': '#7c2808',
+        info: '#2948ff',
+        'info-content': '#ffffff',
+        success: '#00a960',
+        'success-content': '#ffffff',
+        warning: '#ffd500',
+        'warning-content': '#793205',
+        error: '#e90034',
+        'error-content': '#ffffff',
+        '--rounded-box': '1rem',
+        '--rounded-btn': '0.5rem',
+        '--rounded-badge': '2rem',
+        '--border-btn': '2px',
+      },
+    }],
+  },
 };

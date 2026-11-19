@@ -32,7 +32,12 @@ export default function Shell({ title, children, wide = false, rail = null }) {
     <div className="min-h-screen flex">
       {rail}
       <div className="flex-1 min-w-0">
-        <div className="navbar bg-base-200 px-4 gap-2">
+        <div className="navbar bg-neutral text-neutral-content px-4 gap-4">
+          <img 
+            src="./images/logo.png" 
+            alt="Gat's Bar" 
+            className="h-12 w-auto" 
+          />
           <h1 className="flex-1 text-xl font-bold">{title}</h1>
           <span className={`badge ${online ? 'badge-success' : 'badge-error'}`}>{online ? 'live' : 'offline'}</span>
           <span className="text-sm hidden sm:inline">{user.displayName} ({user.role})</span>

@@ -45,11 +45,11 @@ export default function IceBoard({ sound = false }) {
       </div>
       {error && <Notice kind="error" onDismiss={() => setError('')}>{error}</Notice>}
       {requests.map((r) => (
-        <div key={r.id} className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-sm ${r.state === 'READY' ? 'border-success bg-success/10 animate-pulse' : 'border-base-300 bg-base-200'}`}>
+        <div key={r.id} className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-sm ${r.state === 'READY' ? 'border-success bg-success/10 animate-pulse' : 'border-info bg-info/10'}`}>
           <div className="flex-1">
             <p className="font-bold">{r.tokenNumber} · {r.trays} tray{r.trays > 1 ? 's' : ''}</p>
             <p className="text-xs opacity-70">
-              {r.state === 'READY' ? `Ready at the counter. Take it to ${r.tokenNumber}.` : `Kitchen is preparing · ${timeAgo(r.createdAt)} · ${r.requestedBy}`}
+              {r.state === 'READY' ? `Ready at the counter. \nTake it to ${r.tokenNumber}.` : `Kitchen is preparing\n · ${timeAgo(r.createdAt)} · ${r.requestedBy}`}
             </p>
           </div>
           {r.state === 'READY' ? (

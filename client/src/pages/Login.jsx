@@ -63,7 +63,12 @@ export default function Login() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 gap-8">
+      <img 
+        src="/images/logo.png" 
+        alt="Gats Bar" 
+        className="w-40 h-40 object-contain drop-shadow-md" 
+      />
       <div className="card bg-base-200 w-full max-w-sm shadow">
         <div className="card-body gap-3">
           <h1 className="card-title justify-center text-2xl">Gats Bar and Restaurant</h1>

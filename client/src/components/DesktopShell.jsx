@@ -6,7 +6,8 @@ import Icon from './Icon';
 import QrModal from './QrModal';
 import { useAuth } from '../auth/AuthContext';
 
-const itemClass = (isActive) => `btn btn-ghost btn-square ${isActive ? 'btn-active' : ''}`;
+const itemClass = (isActive) =>
+  `btn btn-square ${isActive ? 'btn-primary text-primary-content' : 'btn-ghost'}`;
 
 function RailLink({ to, icon, label, end = false }) {
   return (
@@ -21,7 +22,7 @@ export default function DesktopShell({ title, children, wide = true }) {
   const [qrOpen, setQrOpen] = useState(false);
 
   const rail = (
-    <nav aria-label="Main menu" className="w-14 shrink-0 bg-base-200 border-r border-base-300 flex flex-col items-center gap-2 py-3 sticky top-0 h-screen">
+    <nav aria-label="Main menu" className="w-14 shrink-0 bg-secondary text-secondary-content border-r border-[#1A0701] flex flex-col items-center gap-2 py-3 sticky top-0 h-screen">
       <RailLink to="/desktop" end icon="home" label="Home" />
       <RailLink to="/desktop/order" icon="plus" label="New order" />
       <RailLink to="/desktop/reservations" icon="calendar" label="Reservations" />

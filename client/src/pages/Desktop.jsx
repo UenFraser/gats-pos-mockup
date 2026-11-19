@@ -54,9 +54,15 @@ export default function Desktop() {
 
       <div className="flex flex-col lg:flex-row gap-4 items-start">
         <div className="flex-1 min-w-0 w-full">
-          <h2 className="font-semibold text-sm mb-2">Takeouts</h2>
-          {sessions && takeouts.length === 0 && <p className="text-xs opacity-60 mb-4">No takeout orders waiting.</p>}
+          <h2 className="inline-block text-base font-semibold bg-accent text-accent-content px-4 py-1.5 rounded-xl mb-3">
+            Takeouts
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
+            {sessions && takeouts.length === 0 && (
+              <div className="card border-2 border-dashed border-base-300 p-3 min-h-[140px] flex items-center justify-center text-center opacity-70">
+                <p className="text-sm font-medium">No takeout orders waiting.</p>
+              </div>
+            )}
             {takeouts.map((s) => (
               <button key={s.id} onClick={() => setOpenId(s.id)}
                 className={`card bg-base-100 border-2 p-3 text-left gap-1 ${s.ready ? 'border-success' : 'border-base-300'}`}>
@@ -73,9 +79,15 @@ export default function Desktop() {
             ))}
           </div>
 
-          <h2 className="font-semibold text-sm mb-2">Tables</h2>
-          {sessions && tables.length === 0 && <p className="text-xs opacity-60">No open tabs.</p>}
+          <h2 className="inline-block text-base font-semibold bg-accent text-accent-content px-4 py-1.5 rounded-xl mb-3">
+            Tables
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+            {sessions && tables.length === 0 && (
+              <div className="card border-2 border-dashed border-base-300 p-3 min-h-[100px] flex items-center justify-center text-center opacity-70">
+                <p className="text-sm font-medium">No open tabs.</p>
+              </div>
+            )}
             {tables.map((s) => {
               const hot = s.billRequestedAt || Object.values(s.unread).some((n) => n > 0);
               return (
@@ -94,7 +106,7 @@ export default function Desktop() {
           </div>
         </div>
 
-        <aside className="w-full lg:w-64 shrink-0" aria-label="Ice requests"><IceBoard sound /></aside>
+        <aside className="w-full lg:w-80 shrink-0" aria-label="Ice requests"><IceBoard sound /></aside>
       </div>
 
       {openId && <SessionDetail sessionId={openId} onClose={() => { setOpenId(null); load(); }} />}
