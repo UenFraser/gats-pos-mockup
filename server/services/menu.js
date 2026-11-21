@@ -34,7 +34,7 @@ function getTokens(db, zone) {
     SELECT t.id, t.token_number, t.zone, s.id AS session_id, s.status
       FROM tokens t
       LEFT JOIN sessions s ON s.token_id = t.id AND s.status IN ('RESERVED','OPEN')
-     WHERE t.branch_id = ? ${zone ? 'AND t.zone = ?' : ''}
+     WHERE t.branch_id = ? AND t.active = 1 ${zone ? 'AND t.zone = ?' : ''}
      ORDER BY CASE t.zone WHEN 'RESTAURANT' THEN 1 WHEN 'BAR' THEN 2 ELSE 3 END,
               CAST(substr(t.token_number, 2) AS INTEGER)`).all(...[branchId(db), ...(zone ? [zone] : [])]);
   return rows.map((r) => ({

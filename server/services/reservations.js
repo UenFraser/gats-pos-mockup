@@ -52,7 +52,7 @@ function create(db, rt, user, body) {
   const party = parseParty(body.partySize);
   const time = parseTime(body.time);
   return rt.transaction(db, () => {
-    const token = db.prepare('SELECT id, token_number, zone FROM tokens WHERE id = ? AND branch_id = ?').get(body.tokenId, branchId(db));
+    const token = db.prepare('SELECT id, token_number, zone FROM tokens WHERE id = ? AND branch_id = ? AND active = 1').get(body.tokenId, branchId(db));
     if (!token) throw new HttpError(404, 'Unknown table');
     if (token.zone === 'TAKEOUT') throw new HttpError(422, 'Takeout tokens cannot be reserved');
     if (db.prepare("SELECT 1 FROM sessions WHERE token_id = ? AND status IN ('RESERVED','OPEN')").get(token.id))

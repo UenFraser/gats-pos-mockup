@@ -6,6 +6,7 @@ import { AuthProvider } from './auth/AuthContext';
 import RequireRole from './auth/RequireRole';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ConfirmProvider } from './components/ConfirmProvider';
+import { ThemeProvider } from './components/ThemeProvider';
 import Login from './pages/Login';
 import Waiter from './pages/Waiter';
 import DesktopOrder from './pages/DesktopOrder';
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
+        <ThemeProvider>
         <ConfirmProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -36,6 +38,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
         </ConfirmProvider>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   </ErrorBoundary>

@@ -29,7 +29,7 @@ function requestIce(db, rt, user, body) {
   if (!body || typeof body.tokenId !== 'string') throw new HttpError(400, 'Choose a table');
   const trays = body.trays === undefined ? 1 : body.trays;
   if (!Number.isInteger(trays) || trays < 1 || trays > MAX_TRAYS) throw new HttpError(400, `Trays must be 1 to ${MAX_TRAYS}`);
-  const token = db.prepare('SELECT id, token_number FROM tokens WHERE id = ? AND branch_id = ?').get(body.tokenId, branchId(db));
+  const token = db.prepare('SELECT id, token_number FROM tokens WHERE id = ? AND branch_id = ? AND active = 1').get(body.tokenId, branchId(db));
   if (!token) throw new HttpError(404, 'Unknown table');
   return rt.transaction(db, () => {
     if (db.prepare("SELECT 1 FROM ice_requests WHERE token_id = ? AND status = 'REQUESTED'").get(token.id))

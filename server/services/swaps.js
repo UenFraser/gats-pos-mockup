@@ -35,7 +35,7 @@ function swapItem(db, rt, user, sessionId, body) {
     if (src.session_status !== 'OPEN') throw new HttpError(409, 'This tab is already closed');
     if (v.quantity > src.net_quantity) throw new HttpError(422, src.net_quantity > 0 ? `Only ${src.net_quantity} left to move` : 'This item is no longer on this tab');
 
-    const dest = db.prepare('SELECT id, token_number, zone FROM tokens WHERE id = ? AND branch_id = ?').get(v.toTokenId, branchId(db));
+    const dest = db.prepare('SELECT id, token_number, zone FROM tokens WHERE id = ? AND branch_id = ? AND active = 1').get(v.toTokenId, branchId(db));
     if (!dest) throw new HttpError(404, 'Unknown table');
     if (dest.id === src.token_id) throw new HttpError(422, 'Choose a different table');
     if (src.bar_only && dest.zone !== 'BAR') throw new HttpError(422, `${src.item_name} can only be served at the bar`);

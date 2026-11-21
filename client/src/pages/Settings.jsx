@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Notice from '../components/Notice';
 import DesktopShell from '../components/DesktopShell';
 import SystemPanel from '../components/SystemPanel';
+import TablesPanel from '../components/TablesPanel';
 import { api } from '../lib/api';
 
 export default function Settings() {
@@ -168,6 +169,7 @@ export default function Settings() {
           )}
         </div>
       )}
+      <div className="max-w-xl mt-8"><TablesPanel /></div>
       <div className="max-w-xl mt-8"><SystemPanel /></div>
     </DesktopShell>
   );

@@ -9,7 +9,7 @@ const { SCHEMA_VERSION } = require('../server/db');
 const { startServer } = require('../server');
 const { applyPendingRestore, checkIntegrity, recoverFromDamage } = require('../server/services/restore');
 
-const MAIN_BUILD = '9a'; // shown in Settings > System (must match server/build.js and the screens)
+const MAIN_BUILD = '9b'; // shown in Settings > System (must match server/build.js and the screens)
 const startedAt = Date.now(); // for the startup timing lines in the log
 let shuttingDown = false;
 
@@ -153,7 +153,16 @@ app.whenReady().then(async () => {
 
     server = await startServer(config, hooks);
     log.info(`startup: server ready after ${Date.now() - startedAt} ms`);
-    win = new BrowserWindow({ width: 900, height: 700 });
+    // The window stays hidden until the first screen is drawn, then opens MAXIMIZED (not full screen: the Windows taskbar stays
+    // visible). Because nothing is shown early, there is no white flash. The timer is only a safety net so an error window still appears.
+    win = new BrowserWindow({
+      show: false, width: 1280, height: 800, backgroundColor: '#FAF7F2',
+      icon: path.join(config.clientDir, 'images', 'app-icon.png'), // from tools\make-icon.ps1; ignored when the file is missing
+    });
+    const showMaximized = () => { if (win && !win.isDestroyed() && !win.isVisible()) { win.maximize(); win.show(); } };
+    win.once('ready-to-show', showMaximized);
+    const showTimer = setTimeout(showMaximized, 8000);
+    win.once('show', () => clearTimeout(showTimer));
     win.webContents.on('did-fail-load', (_e, code, desc) => {
       log.error(`page failed to load: ${code} ${desc}`);
       dialog.showErrorBox('Page failed to load', `${code}: ${desc}`);

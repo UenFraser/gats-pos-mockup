@@ -29,6 +29,7 @@ const { registerIceRoutes } = require('./routes/ice');
 const { registerReservationRoutes } = require('./routes/reservations');
 const { registerTakeoutRoutes } = require('./routes/takeouts');
 const { registerSummaryRoutes } = require('./routes/summaries');
+const { registerTokenAdminRoutes } = require('./routes/tokenAdmin');
 const { refreshSummaries } = require('./services/summary');
 const { registerPrintRoutes } = require('./printing/routes');
 
@@ -86,6 +87,7 @@ async function startServer(config, hooks = {}) {
   registerReservationRoutes(app, db, rt);
   registerTakeoutRoutes(app, db, rt);
   registerSummaryRoutes(app, db);
+  registerTokenAdminRoutes(app, db, rt);
   registerAdminRoutes(app, db, config, hooks);
   registerPrintRoutes(app);
 

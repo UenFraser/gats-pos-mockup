@@ -21,7 +21,7 @@ import { useAuth } from '../auth/AuthContext';
 const ZONES = ['RESTAURANT', 'BAR', 'TAKEOUT'];
 const ZONE_LABEL = { RESTAURANT: 'Restaurant', BAR: 'Bar', TAKEOUT: 'Takeout' };
 const STATUS_CLASS = { FREE: 'btn-outline', OPEN: 'btn-warning', RESERVED: 'btn-info' };
-const TOKEN_REFRESH = ['token:changed', 'session:updated', 'session:bill-requested', 'session:bill-cleared', 'session:closed', 'connect'];
+const TOKEN_REFRESH = ['token:changed', 'tokens:changed', 'session:updated', 'session:bill-requested', 'session:bill-cleared', 'session:closed', 'connect'];
 const MAX_QTY = 99;
 
 // "HH:MM" (today, or tomorrow if that time has clearly passed) -> ISO, or undefined when left empty.

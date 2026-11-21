@@ -47,7 +47,7 @@ function placeOrder(db, rt, user, body) {
   const dedupeKey = requestId && `${user.id}:${requestId}`;
   if (dedupeKey && recent.has(dedupeKey)) return { ...recent.get(dedupeKey).result, duplicate: true };
 
-  const token = db.prepare('SELECT id, token_number, zone FROM tokens WHERE id = ? AND branch_id = ?').get(tokenId, branchId(db));
+  const token = db.prepare('SELECT id, token_number, zone FROM tokens WHERE id = ? AND branch_id = ? AND active = 1').get(tokenId, branchId(db));
   if (!token) throw new OrderError(404, 'Unknown token');
 
   const result = rt.transaction(db, () => {

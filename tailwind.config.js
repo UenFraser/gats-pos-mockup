@@ -5,8 +5,8 @@ module.exports = {
   },
   plugins: [require('daisyui')],
   daisyui: {
-    themes: [{
-      gats: {
+    themes: [
+      { gats: {
         primary: '#00000f',
         'primary-content': '#ffffff',
         secondary: '#370a00',
@@ -31,7 +31,8 @@ module.exports = {
         '--rounded-btn': '0.5rem',
         '--rounded-badge': '2rem',
         '--border-btn': '2px',
-      },
-    }],
+      }, },
+      'luxury',
+    ],
   },
 };
