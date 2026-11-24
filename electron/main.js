@@ -9,7 +9,7 @@ const { SCHEMA_VERSION } = require('../server/db');
 const { startServer } = require('../server');
 const { applyPendingRestore, checkIntegrity, recoverFromDamage } = require('../server/services/restore');
 
-const MAIN_BUILD = '9b'; // shown in Settings > System (must match server/build.js and the screens)
+const MAIN_BUILD = '9c'; // shown in Settings > System (must match server/build.js and the screens)
 const startedAt = Date.now(); // for the startup timing lines in the log
 let shuttingDown = false;
 
@@ -95,12 +95,17 @@ if (process.platform === 'win32') {
       "@(Get-NetConnectionProfile | Where-Object { $_.NetworkCategory -eq 'Public' } | ForEach-Object { $_.Name }) | ConvertTo-Json -Compress");
     let publicNetworks = [];
     if (!err && stdout.trim()) { try { publicNetworks = [].concat(JSON.parse(stdout.trim())); } catch { /* ignore */ } }
-    return { rule, publicNetworks };
+    let scope = null; // which networks the rule covers: 'Any', 'Private'...
+    if (rule === true) {
+      const r = await powershell(`(Get-NetFirewallRule -DisplayName '${RULE}' -ErrorAction SilentlyContinue | Select-Object -First 1).Profile`);
+      if (!r.err && r.stdout.trim()) scope = r.stdout.trim();
+    }
+    return { rule, publicNetworks, scope };
   };
   // Opens the Windows permission prompt (UAC) on the POS computer, then adds the rule.
   hooks.allowFirewall = () => {
     const rule = `Get-NetFirewallRule -DisplayName '${RULE}' -ErrorAction SilentlyContinue | Remove-NetFirewallRule; ` +
-      `New-NetFirewallRule -DisplayName '${RULE}' -Direction Inbound -Protocol TCP -LocalPort ${config.port} -Action Allow -Profile Private | Out-Null`;
+      `New-NetFirewallRule -DisplayName '${RULE}' -Direction Inbound -Protocol TCP -LocalPort ${config.port} -Action Allow -Profile Any -RemoteAddress LocalSubnet | Out-Null`; // any network profile, but only devices on the same local network
     const encoded = Buffer.from(rule, 'utf16le').toString('base64');
     log.info('asking Windows to add the firewall rule');
     execFile('powershell.exe', ['-NoProfile', '-Command', `Start-Process -FilePath powershell.exe -Verb RunAs -ArgumentList '-NoProfile','-EncodedCommand','${encoded}'`],

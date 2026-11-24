@@ -75,7 +75,22 @@ export default function SystemPanel() {
         <div className="card bg-base-200 p-3 space-y-2">
           <p className="text-sm font-semibold">Phones and the Windows Firewall</p>
           {info.firewall.rule === true
-            ? <p className="text-xs text-success">Phones on your private network are allowed through the firewall.</p>
+            ? (
+              <>
+                <p className="text-xs text-success">Phones on your local network are allowed through the firewall.</p>
+                {info.firewall.scope && !/any/i.test(info.firewall.scope) && (
+                  <>
+                    <div className="alert alert-warning text-xs">
+                      <span>The rule only covers <b>{info.firewall.scope}</b> networks. Windows can switch a network to Public by itself (after an update or a router change), and then phones are blocked even though everything looks fine. Tap the button to make the rule work on every network. It still only lets in devices on your own Wi-Fi.</span>
+                    </div>
+                    <button className="btn btn-sm btn-primary w-fit" disabled={busy}
+                      onClick={() => run(() => api.post('/api/system/firewall'), 'Windows is asking for permission on the POS computer. Click Yes there.').then(waitForFirewall)}>
+                      Make it work on every network
+                    </button>
+                  </>
+                )}
+              </>
+            )
             : (
               <>
                 <div className="alert alert-warning text-xs">
@@ -92,6 +107,17 @@ export default function SystemPanel() {
               <span>This computer is on a network Windows calls Public ({info.firewall.publicNetworks.join(', ')}). Public networks block phones. In Windows: Settings, Network and internet, Wi-Fi (or Ethernet), your network, then choose Private.</span>
             </div>
           )}
+        </div>
+      )}
+
+      {info.network && (
+        <div className="card bg-base-200 p-3 text-xs space-y-1">
+          <p className="text-sm font-semibold">Network (watched every minute)</p>
+          <p>The POS computer is at {info.network.addresses.length ? info.network.addresses.join(', ') : 'no network found'}.
+            {info.network.addressChangedAt ? ` The address last changed at ${dateTimeLocal(info.network.addressChangedAt)}: phones must use the new address (scan the QR again).` : ' It has not changed since the POS started.'}</p>
+          <p className={info.network.internet === false ? 'text-error font-semibold' : ''}>
+            Internet: {info.network.internet === null ? 'checking' : info.network.internet ? 'reachable' : 'NOT reachable. Many phones leave a Wi-Fi network with no internet and use mobile data, which cannot reach the POS. See docs/NETWORK.md.'}
+          </p>
         </div>
       )}
 

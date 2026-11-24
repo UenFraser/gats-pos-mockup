@@ -30,6 +30,7 @@ const { registerReservationRoutes } = require('./routes/reservations');
 const { registerTakeoutRoutes } = require('./routes/takeouts');
 const { registerSummaryRoutes } = require('./routes/summaries');
 const { registerTokenAdminRoutes } = require('./routes/tokenAdmin');
+const { startNetworkWatch } = require('./services/networkWatch');
 const { refreshSummaries } = require('./services/summary');
 const { registerPrintRoutes } = require('./printing/routes');
 
@@ -55,6 +56,8 @@ async function startServer(config, hooks = {}) {
   refresh();
   const summaryTimer = setInterval(refresh, 15 * 60 * 1000);
   if (summaryTimer.unref) summaryTimer.unref();
+
+  const netWatch = startNetworkWatch(); // logs address changes and internet loss; shown in Settings > System
 
   const app = express();
   app.disable('x-powered-by');
@@ -88,7 +91,7 @@ async function startServer(config, hooks = {}) {
   registerTakeoutRoutes(app, db, rt);
   registerSummaryRoutes(app, db);
   registerTokenAdminRoutes(app, db, rt);
-  registerAdminRoutes(app, db, config, hooks);
+  registerAdminRoutes(app, db, config, hooks, netWatch.status);
   registerPrintRoutes(app);
 
   // Unknown /api paths get JSON 404 (not the React page).
@@ -120,7 +123,7 @@ async function startServer(config, hooks = {}) {
   return {
     port,
     rt,
-    close: () => { clearInterval(summaryTimer); clearInterval(backupTimer); apiLimit.stop(); loginLimit.stop(); io.close(); db.close(); }, // io.close() also closes the HTTP server
+    close: () => { netWatch.stop(); clearInterval(summaryTimer); clearInterval(backupTimer); apiLimit.stop(); loginLimit.stop(); io.close(); db.close(); }, // io.close() also closes the HTTP server
   };
 }
 

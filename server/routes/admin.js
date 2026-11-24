@@ -4,7 +4,7 @@ const { HttpError } = require('../services/errors');
 const log = require('../log');
 
 // Settings > System. Managers only.
-function registerAdminRoutes(app, db, config, hooks) {
+function registerAdminRoutes(app, db, config, hooks, networkStatus = () => null) {
   const guard = [requireAuth(db), requireRole('MANAGER')];
   const handle = (fn) => async (req, res) => {
     try { res.json(await fn(req)); }
@@ -15,7 +15,7 @@ function registerAdminRoutes(app, db, config, hooks) {
     }
   };
   app.get('/api/system', ...guard, handle(async () => ({
-    system: { ...getSystemInfo(db, config, hooks), firewall: hooks.firewallStatus ? await hooks.firewallStatus() : null },
+    system: { ...getSystemInfo(db, config, hooks), firewall: hooks.firewallStatus ? await hooks.firewallStatus() : null, network: networkStatus() },
   })));
   app.patch('/api/system', ...guard, handle((req) => updateSystemSettings(db, hooks, req.body)));
   app.post('/api/system/backup', ...guard, handle(() => backupNow(db, config)));

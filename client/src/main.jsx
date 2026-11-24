@@ -7,6 +7,7 @@ import RequireRole from './auth/RequireRole';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ConfirmProvider } from './components/ConfirmProvider';
 import { ThemeProvider } from './components/ThemeProvider';
+import OfflineHint from './components/OfflineHint';
 import Login from './pages/Login';
 import Waiter from './pages/Waiter';
 import DesktopOrder from './pages/DesktopOrder';
@@ -37,6 +38,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/kitchen/*" element={<RequireRole roles={['KDS', 'MANAGER']}><Kitchen /></RequireRole>} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        <OfflineHint />
         </ConfirmProvider>
         </ThemeProvider>
       </AuthProvider>
